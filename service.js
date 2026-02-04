@@ -861,4 +861,5 @@ saveDailyCheck: async (formData) => {
         shareAction: shareAction
     };
 },
+};
 
