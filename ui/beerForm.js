@@ -7,7 +7,7 @@ import dayjs from 'https://cdn.jsdelivr.net/npm/dayjs@1.11.10/+esm';
 /* --- Beer Modal Logic --- */
 
 export const openBeerModal = (e, dateStr = null, log = null) => {
-    resetBeerForm();
+    resetBeerForm(true);
 
     // --- 日付セットロジックを整理 ---
     let targetDate;
@@ -19,7 +19,7 @@ export const openBeerModal = (e, dateStr = null, log = null) => {
         targetDate = dayjs(dateStr).format('YYYY-MM-DD');
     } else {
         // 通常の追加時：今日
-        targetDate = getVirtualDate();
+        targetDate = dayjs(dateStr || getVirtualDate()).format('YYYY-MM-DD');
     }
 
     const dateInput = document.getElementById('beer-date');
@@ -406,7 +406,3 @@ export const updateInputSuggestions = async () => {
         console.error("Failed to update suggestions:", e);
     }
 };
-
-
-
-

@@ -383,21 +383,17 @@ document.addEventListener('bulk-delete', async () => {
         bind('btn-search-untappd', 'click', searchUntappd);
 
         // 🍺 ビールの削除ボタン
-        bind('btn-delete-beer', 'click', async () => {
-            const idVal = document.getElementById('editing-log-id').value;
-            if (!idVal) return;
+        bind('btn-delete-beer', 'click', () => {
+    const idVal = document.getElementById('editing-log-id').value;
+    if (!idVal) return;
+    if (!confirm('このビール記録を削除しますか？')) return;
 
-            if (!confirm('このビール記録を削除しますか？')) return;
+    document.dispatchEvent(new CustomEvent('request-delete-log', {
+        detail: { id: parseInt(idVal) }
+    }));
 
-            try {
-                // 削除実行
-                await Service.deleteLog(parseInt(idVal));
-                
-                // 画面を更新して閉じる
-                toggleModal('beer-modal', false);
-                await refreshUI();
-            } catch (e) { console.error(e); }
-        });
+    toggleModal('beer-modal', false);
+});
 
         // --- 運動の保存処理 ---
         bind('btn-save-exercise', 'click', async () => {
@@ -422,16 +418,17 @@ document.addEventListener('bulk-delete', async () => {
 });
 
         // --- 運動の削除ボタン ---
-        bind('btn-delete-exercise', 'click', async () => {
-            const idVal = document.getElementById('editing-exercise-id').value;
-            
-            if (!idVal) return;
-            if (!confirm('この運動記録を削除しますか？')) return;
+        bind('btn-delete-exercise', 'click', () => {
+    const idVal = document.getElementById('editing-exercise-id').value;
+    if (!idVal) return;
+    if (!confirm('この運動記録を削除しますか？')) return;
 
-            await Service.deleteLog(parseInt(idVal));
-                
-            closeModal('exercise-modal');
-        });
+    document.dispatchEvent(new CustomEvent('request-delete-log', {
+        detail: { id: parseInt(idVal) }
+    }));
+
+    closeModal('exercise-modal'); // UI都合の処理だけここでOK
+});
 
         bind('btn-save-check', 'click', () => {
             // 判定用に「保存済みデータ」の存在をチェック（音の出し分け用）
