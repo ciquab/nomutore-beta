@@ -17,7 +17,7 @@ import { Timer } from './timer.js';
 import { Share } from './share.js';
 
 import { 
-    openCheckModal, renderSettings, openHelp, openLogDetail, 
+    renderSettings, openHelp, openLogDetail, 
     updateModeSelector, renderQuickButtons, closeModal,
     openTimer, closeTimer,
     openActionMenu, handleSaveSettings, 
@@ -38,6 +38,7 @@ import {
     searchUntappd
 } from './beerForm.js';
 import { getExerciseFormData, openManualInput } from './exerciseForm.js';
+import { renderCheckEditor, openCheckModal, getCheckFormData } from './checkForm.js';
 
 import dayjs from 'https://cdn.jsdelivr.net/npm/dayjs@1.11.10/+esm';
 
@@ -433,31 +434,22 @@ document.addEventListener('bulk-delete', async () => {
 });
 
         bind('btn-save-check', 'click', () => {
-            // 判定用に「保存済みデータ」の存在をチェック（音の出し分け用）
-            const isUpdate = document.getElementById('btn-save-check').textContent === 'Update Check';
-            const date = document.getElementById('check-date').value;
-            const isDryDay = document.getElementById('check-is-dry').checked;
-            const weight = document.getElementById('check-weight').value;
+    try {
+        // 専門家（checkForm.js）にデータを集めてもらう
+        const detail = getCheckFormData();
+        
+        // 常にタップ音を出す
+        Feedback.tap();
 
-            // ★追加: 動的スキーマから値を取得
-            let schema = CHECK_SCHEMA;
-            try {
-                const stored = localStorage.getItem(APP.STORAGE_KEYS.CHECK_SCHEMA);
-                if (stored) schema = JSON.parse(stored);
-            } catch(e) {}
-
-            // 基本データ
-            const detail = { date, isDryDay, weight, isSaved: true };
-
-            // 動的データの収集
-            schema.forEach(item => {
-                const el = document.getElementById(`check-${item.id}`);
-                detail[item.id] = el ? el.checked : false;
-            });
-
-            document.dispatchEvent(new CustomEvent('save-check', { detail }));
-            toggleModal('check-modal', false);
-        });
+        // 収集したデータをイベントで飛ばす
+        document.dispatchEvent(new CustomEvent('save-check', { detail }));
+        
+        toggleModal('check-modal', false);
+    } catch (e) {
+        console.error('Check Form Data Collection Error:', e);
+        showMessage('入力内容の取得に失敗しました', 'error');
+    }
+});
 
         bind('tab-beer-preset', 'click', () => switchBeerInputTab('preset'));
         bind('tab-beer-custom', 'click', () => switchBeerInputTab('custom'));

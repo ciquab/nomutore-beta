@@ -7,24 +7,25 @@ import dayjs from 'https://cdn.jsdelivr.net/npm/dayjs@1.11.10/+esm';
 /* --- Beer Modal Logic --- */
 
 export const openBeerModal = (e, dateStr = null, log = null) => {
-    resetBeerForm(true);
+    // 1. 引数に true を渡して、リセット処理による「今日への強制戻し」を阻止する
+    resetBeerForm(true); 
 
-    // --- 日付セットロジックを整理 ---
+    // 2. 日付のバトンを確実に受け取る（dayjsを通して YYYY-MM-DD に変換）
     let targetDate;
     if (log) {
-        // 編集時：ログのタイムスタンプを使用
+        // 編集時
         targetDate = dayjs(log.timestamp).format('YYYY-MM-DD');
-    } else if (dateStr) {
-        // カレンダーからの追加時：渡された日付を使用
-        targetDate = dayjs(dateStr).format('YYYY-MM-DD');
     } else {
-        // 通常の追加時：今日
+        // ★ここを修正：dateStrがあればそれを使い、なければ今日にする。
+        // dayjsを通すことで、Dateオブジェクトや文字列など、どんな形式でも正しく変換されます。
         targetDate = dayjs(dateStr || getVirtualDate()).format('YYYY-MM-DD');
     }
 
     const dateInput = document.getElementById('beer-date');
-    if(dateInput) dateInput.value = targetDate;
-    // ----------------------------
+    if (dateInput) {
+        dateInput.value = targetDate;
+        console.log(`[BeerForm] Target date set to: ${targetDate}`); // デバッグ用
+    }
 
     updateBeerSelectOptions();
 
