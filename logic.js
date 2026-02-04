@@ -200,49 +200,40 @@ export const Calc = {
 
             // --- 判定ロジック ---
 
-            // 1. 休肝日チェックがONなら継続 (最強)
-            if (isDry === true) {
-                streak++;
-                checkDate = checkDate.subtract(1, 'day');
-                continue;
-            }
+            // 1. 【成功】手動で休肝日チェックをいれた、または「お酒を飲んでいない」なら継続
+// 「isDry !== false」という条件を外すのがポイントです。
+// お酒を飲んでいないなら、チェックボックスがどうあれストリークは壊すべきではありません。
+if (isDry === true || !dayLogs.hasBeer) {
+    streak++;
+    checkDate = checkDate.subtract(1, 'day');
+    continue;
+}
 
-            // 2. ビールを飲んでいない（かつ休肝日NGとも言っていない）なら継続
-            if (!dayLogs.hasBeer && isDry !== false) {
-                streak++;
-                checkDate = checkDate.subtract(1, 'day');
-                continue;
-            }
+// 2. 【成功】ビールを飲んだが、運動で完済している (Balance >= 0) なら継続
+if (dayLogs.hasBeer && dayLogs.balance >= -0.1) {
+    streak++;
+    checkDate = checkDate.subtract(1, 'day');
+    continue;
+}
 
-            // 3. ビールを飲んだが、運動で完済している (Balance >= 0) なら継続
-            // ※端数計算の誤差を許容するため -0.1kcal 程度までセーフとしても良い
-            if (dayLogs.hasBeer && dayLogs.balance >= -0.1) {
-                streak++;
-                checkDate = checkDate.subtract(1, 'day');
-                continue;
-            }
+// --- 3. 【救済】日付変更線対策 (Dateline Protection) ---
+// ここは「完全に何も記録していない（undefined）」の日のための救済として残します。
+const prevDate = checkDate.subtract(1, 'day');
+const prevStr = prevDate.format('YYYY-MM-DD');
+const prevLog = logMap.get(prevStr) || { hasBeer: false, hasExercise: false, balance: 0 };
+const prevCheck = checkMap.get(prevStr);
 
-            // --- 日付変更線対策 (Dateline Protection) ---
-            // 修正：今日の記録が「未入力」の場合のみ、前日の状態を見てチェーンを繋ぐ
-            const prevDate = checkDate.subtract(1, 'day');
-            const prevStr = prevDate.format('YYYY-MM-DD');
-            const prevLog = logMap.get(prevStr) || { hasBeer: false, hasExercise: false, balance: 0 };
-            const prevCheck = checkMap.get(prevStr);
+const isPrevValid = (prevCheck === true) || 
+                    (!prevLog.hasBeer && prevCheck !== false) || 
+                    (prevLog.hasBeer && prevLog.balance >= -0.1);
 
-            const isPrevValid = (prevCheck === true) || 
-                                (!prevLog.hasBeer && prevCheck !== false) || 
-                                (prevLog.hasBeer && prevLog.balance >= -0.1);
+if (isDry === undefined && !dayLogs.hasBeer && isPrevValid) {
+    checkDate = checkDate.subtract(1, 'day');
+    continue;
+}
 
-            // ★超重要修正：今日のデータが undefined (未入力) で、かつ今日ビールを飲んでおらず、
-            // さらに前日が有効だった場合のみ、「1日のうっかり忘れ」としてスキップを許可する。
-            if (isDry === undefined && !dayLogs.hasBeer && isPrevValid) {
-                checkDate = checkDate.subtract(1, 'day');
-                continue;
-            }
-
-            // 今日のデータが false (休肝日拒否) または飲酒記録(hasBeer: true)がある場合は、
-            // 救済せずにここでストリークを終了する。
-            break;
+// --- 4. 【終了】借金がある場合のみ、ここで終了 ---
+break;
             
             if (streak > 3650) break; // 無限ループガード
         }
@@ -459,5 +450,6 @@ export const getVirtualDate = (timestamp = Date.now()) => {
     return date.format('YYYY-MM-DD');
 
 };
+
 
 
