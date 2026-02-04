@@ -223,7 +223,7 @@ export const Calc = {
             }
 
             // --- 日付変更線対策 (Dateline Protection) ---
-            // 「記録忘れ」のみを救済し、「飲酒による失敗」は救済しないように修正
+            // 修正：今日の記録が「未入力」の場合のみ、前日の状態を見てチェーンを繋ぐ
             const prevDate = checkDate.subtract(1, 'day');
             const prevStr = prevDate.format('YYYY-MM-DD');
             const prevLog = logMap.get(prevStr) || { hasBeer: false, hasExercise: false, balance: 0 };
@@ -233,13 +233,15 @@ export const Calc = {
                                 (!prevLog.hasBeer && prevCheck !== false) || 
                                 (prevLog.hasBeer && prevLog.balance >= -0.1);
 
-            // ★ 修正：データが「未入力(undefined)」かつ「前日が有効」な場合のみスキップを許可する
+            // ★超重要修正：今日のデータが undefined (未入力) で、かつ今日ビールを飲んでおらず、
+            // さらに前日が有効だった場合のみ、「1日のうっかり忘れ」としてスキップを許可する。
             if (isDry === undefined && !dayLogs.hasBeer && isPrevValid) {
                 checkDate = checkDate.subtract(1, 'day');
                 continue;
             }
 
-            // それ以外（飲酒記録がある、または前日も無効）なら、ここで完全にストリーク終了
+            // 今日のデータが false (休肝日拒否) または飲酒記録(hasBeer: true)がある場合は、
+            // 救済せずにここでストリークを終了する。
             break;
             
             if (streak > 3650) break; // 無限ループガード
@@ -457,4 +459,5 @@ export const getVirtualDate = (timestamp = Date.now()) => {
     return date.format('YYYY-MM-DD');
 
 };
+
 
