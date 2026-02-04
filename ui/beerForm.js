@@ -16,7 +16,7 @@ export const openBeerModal = (e, dateStr = null, log = null) => {
         targetDate = dayjs(log.timestamp).format('YYYY-MM-DD');
     } else if (dateStr) {
         // カレンダーからの追加時：渡された日付を使用
-        targetDate = dateStr;
+        targetDate = dayjs(dateStr).format('YYYY-MM-DD');
     } else {
         // 通常の追加時：今日
         targetDate = getVirtualDate();
