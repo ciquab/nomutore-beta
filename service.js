@@ -626,27 +626,39 @@ export const Service = {
         // 新規登録
         await db.logs.add(logData);
 
-        // 休肝日自動解除の判定
-        const ts = dayjs(data.timestamp);
-        const existingCheck = await db.checks.where('timestamp')
-            .between(ts.startOf('day').valueOf(), ts.endOf('day').valueOf(), true, true)
-            .first();
-        
-        if (existingCheck && existingCheck.isDryDay) {
-            await db.checks.update(existingCheck.id, { isDryDay: false });
-            // ★修正: letで宣言した変数に代入
+        // Untappd連携URLの準備
+            if (data.useUntappd && data.brewery && data.brand) {
+                const query = encodeURIComponent(`${data.brewery} ${data.brand}`);
+                // ★修正: letで宣言した変数に代入
+                untappdUrl = `https://untappd.com/search?q=${query}`;
+            }
+        }
+
+        // ★ ここからが重要：if/else の「外」に移動し、内容を強化します
+    // 2. その日の「すべての」チェックデータを取得（重複対策）
+    const ts = dayjs(data.timestamp);
+    const start = ts.startOf('day').valueOf();
+    const end = ts.endOf('day').valueOf();
+    
+    const existingChecks = await db.checks.where('timestamp').between(start, end, true, true).toArray();
+
+    if (existingChecks.length > 0) {
+        // 最も重要な1件（既存レコード）を「休肝日なし」に更新
+        const primaryCheck = existingChecks[0];
+        if (primaryCheck.isDryDay) {
+            await db.checks.update(primaryCheck.id, { isDryDay: false });
             dryDayCanceled = true;
         }
 
-        // Untappd連携URLの準備
-        if (data.useUntappd && data.brewery && data.brand) {
-            const query = encodeURIComponent(`${data.brewery} ${data.brand}`);
-            // ★修正: letで宣言した変数に代入
-            untappdUrl = `https://untappd.com/search?q=${query}`;
+        // JSONで見られた「重複レコード」があれば、このタイミングで削除して掃除する
+        if (existingChecks.length > 1) {
+            const redundantIds = existingChecks.slice(1).map(c => c.id);
+            await db.checks.bulkDelete(redundantIds);
+            console.log(`[Service] Cleaned up ${redundantIds.length} redundant checks for consistency.`);
         }
     }
 
-    // シェア用データの準備 (Serviceの他のメソッドやCalcを利用)
+    // 3. スナップショットから最新バランスを取得してシェア文言作成
     const { balance } = await Service.getAppDataSnapshot();
     const shareText = Calc.generateShareText(logData, balance);
     const shareAction = { 
@@ -657,10 +669,9 @@ export const Service = {
         imageData: logData 
     };
 
-    // 履歴再計算 (副作用)
+    // 4. 履歴再計算（これでストリークも最新ログを反映して計算されます）
     await Service.recalcImpactedHistory(data.timestamp);
 
-    // ★重要: UI層への「報告書」を返す
     return {
         success: true,
         isUpdate: !!id,
