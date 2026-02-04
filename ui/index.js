@@ -60,6 +60,8 @@ export const refreshUI = async () => {
         renderChart(allLogs, checks);
         await renderRecordTabShortcuts();
 
+        await updateLogListView(false);
+
         // タブ固有の更新も Service からもらったデータを使う
         if (StateManager.cellarViewMode === 'stats') {
             renderBeerStats(logs, allLogs);

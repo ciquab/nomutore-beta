@@ -48,90 +48,76 @@ export const openActionMenu = async (dateStr = null) => {
 };
 
 /**
- * Action Menu用: ビールボタン描画
- * ★修正: 直近2件のビールを表示 (ID降順で取得済み)
+ * Action Menu用: ビールボタン描画 (縦リスト形式に統一)
  */
 const renderActionMenuBeerPresets = async () => {
     const container = document.getElementById('action-menu-beer-presets');
     if (!container) return;
 
-    // ★変更: 直近2件を取得 (service.jsでID降順に修正済み)
-    const recentBeers = await Service.getRecentBeers(2);
+    // HTML側のグリッドクラスを上書き（もしあれば）
+    container.className = "space-y-2"; 
 
+    const recentBeers = await Service.getRecentBeers(2);
     let html = '';
 
     if (recentBeers.length > 0) {
-        html += `<p class="col-span-2 text-[10px] font-bold text-gray-400 uppercase mb-1">前回のビール</p>`;
-    }
-
-    if (recentBeers.length > 0) {
+        html += `<p class="text-[10px] font-bold text-gray-400 uppercase mb-2">前回のビール</p>`;
+        
         recentBeers.forEach((beer, index) => {
-            // スタイル判定
             const isIPA = beer.style && beer.style.includes('IPA');
             const isStout = beer.style && (beer.style.includes('Stout') || beer.style.includes('Porter'));
             
-            let bgClass = 'bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-800';
+            let bgClass = 'bg-amber-50 dark:bg-amber-900/10 border-amber-100 dark:border-amber-800/50';
             let iconColor = 'text-amber-500';
 
             if (isIPA) {
-                bgClass = 'bg-orange-50 dark:bg-orange-900/20 border-orange-100 dark:border-orange-800';
+                bgClass = 'bg-orange-50 dark:bg-orange-900/10 border-orange-100 dark:border-orange-800/50';
                 iconColor = 'text-orange-500';
             } else if (isStout) {
-                bgClass = 'bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700';
-                iconColor = 'text-gray-600 dark:text-gray-400';
+                bgClass = 'bg-gray-100 dark:bg-gray-800/40 border-gray-200 dark:border-gray-700';
+                iconColor = 'text-gray-400';
             }
 
-            // リピート用データ
             const repeatPayload = {
                 type: 'beer',
                 name: beer.name,
                 brand: beer.brand || beer.name,
                 brewery: beer.brewery,
                 style: beer.style,
-                size: '350',
+                size: beer.size || '350',
                 count: 1
             };
             
             const jsonParam = JSON.stringify(repeatPayload).replace(/"/g, "&quot;");
             
-            // エスケープ処理
-            const safeName = escapeHtml(beer.name);       
-            const safeBrand = escapeHtml(beer.brand || ''); 
-            const safeBrewery = escapeHtml(beer.brewery || ''); 
-            const safeStyle = escapeHtml(beer.style || ''); 
+            const mainLabel = escapeHtml(beer.brand || beer.name);
+            const subLabel = escapeHtml(beer.brewery || beer.style || 'Beer');
+            const kcal = Math.abs(Math.round(beer.kcal / (beer.count || 1))); // 1本当たりのカロリー
 
-            // ★修正: 表示ロジック
-            // Main: 銘柄 (なければ名前)
-            // Sub: ブルワリー (なければスタイル)
-            let mainLabel = safeBrand || safeName;
-            let subLabel = safeBrewery || safeStyle || 'Beer';
-
-            // 例外処理: 名前と銘柄が同じ(スタイル名だけの場合)で、かつブルワリーもない時
-            if (!safeBrand && !safeBrewery) {
-                 mainLabel = safeName;
-                 subLabel = safeStyle || 'Beer';
-            }
-
-            // ★修正: HTML生成時に mainLabel, subLabel を使用
             html += `
                 <button onclick="handleRepeat(${jsonParam}); UI.closeModal('action-menu-modal');" 
-                        class="flex items-center gap-3 p-4 rounded-2xl border active:scale-95 transition shadow-sm ${bgClass}">
-                    <div class="w-10 h-10 rounded-full bg-white/60 dark:bg-black/20 flex items-center justify-center shrink-0">
+                        class="w-full flex items-center gap-3 p-4 rounded-2xl border active:scale-95 transition shadow-sm hover:brightness-95 ${bgClass} group">
+                    <div class="w-10 h-10 rounded-full bg-white dark:bg-base-900 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-110 transition">
                         <i class="ph-duotone ph-beer-bottle ${iconColor} text-xl"></i>
                     </div>
-                    <div class="text-left overflow-hidden">
+                    <div class="text-left overflow-hidden flex-1">
                         <div class="flex items-center gap-1 mb-0.5">
                             <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider">No.${index + 1}</span>
                         </div>
                         <div class="text-xs font-bold text-gray-900 dark:text-white truncate">${mainLabel}</div>
-                        <div class="text-[9px] text-gray-500 truncate">${subLabel}</div>
+                        <div class="text-[9px] text-gray-500 truncate">
+                            ${subLabel} <span class="opacity-50 mx-1">/</span> ${beer.size || '350'}ml <span class="opacity-50 mx-1">/</span> ${kcal}kcal
+                        </div>
+                    </div>
+                    <div class="text-gray-300 dark:text-gray-600">
+                        <i class="ph-bold ph-caret-right"></i>
                     </div>
                 </button>
             `;
         });
     } else {
         html += `
-            <button onclick="UI.openBeerModal(); UI.closeModal('action-menu-modal');" class="col-span-2 p-4 rounded-xl border border-dashed border-gray-300 dark:border-gray-700 text-gray-400 text-xs font-bold flex items-center justify-center gap-2">
+            <button onclick="UI.openBeerModal(); UI.closeModal('action-menu-modal');" class="w-full p-4 rounded-xl border border-dashed border-gray-300 dark:border-gray-700 text-gray-400 text-xs font-bold flex items-center justify-center gap-2">
                 <i class="ph-bold ph-plus"></i> Log First Beer
             </button>
         `;
@@ -1048,19 +1034,14 @@ export const openLogDetail = (log) => {
     });
 
     // 閉じる関数
-    const closeModalFunc = () => {
-        // 閉じる音
-        if(typeof Feedback !== 'undefined') Feedback.uiSwitch();
+    const closeModalFunc = (silent = false) => {
+        // 引数が true でない時だけ音を鳴らす
+        if(!silent && typeof Feedback !== 'undefined') Feedback.uiSwitch();
 
         const bg = document.getElementById(`${modalId}-bg`);
         const content = document.getElementById(`${modalId}-content`);
-        
         if(bg) bg.classList.add('opacity-0');
-        
-        // 画面下へスライドダウン
-        if(content) {
-            content.classList.add('translate-y-full', 'sm:translate-y-10', 'opacity-0');
-        }
+        if(content) content.classList.add('translate-y-full', 'sm:translate-y-10', 'opacity-0');
         
         setTimeout(() => modal.remove(), 300);
     };
@@ -1080,23 +1061,22 @@ export const openLogDetail = (log) => {
         };
     }
 
-    // 編集ボタン
+    // --- 編集ボタンの修正 ---
     document.getElementById('btn-detail-edit').onclick = () => {
-        if(typeof Feedback !== 'undefined') Feedback.uiSwitch();
-        closeModalFunc();
-        // CustomEventで編集リクエストを発火
+        // ここでの音（uiSwitch）を削除
+        closeModalFunc(true); // 音なしで閉じる
         const event = new CustomEvent('request-edit-log', { detail: { id: log.id } });
         document.dispatchEvent(event);
     };
 
-    // 削除ボタン
+    // --- 削除ボタンの修正 ---
     document.getElementById('btn-detail-delete').onclick = () => {
-        if(typeof Feedback !== 'undefined') Feedback.uiSwitch();
+        // ここでの音（uiSwitch）を削除
+        // 確認ダイアログを出し、OKならイベントを飛ばす
         if(confirm('このログを削除しますか？')) {
-            // CustomEventで削除リクエストを発火
             const event = new CustomEvent('request-delete-log', { detail: { id: log.id } });
             document.dispatchEvent(event);
-            closeModalFunc();
+            closeModalFunc(true); // 削除音が index.js 側で鳴るので、こちらは音なしで閉じる
         }
     };
 };
