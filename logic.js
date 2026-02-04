@@ -222,30 +222,24 @@ export const Calc = {
                 continue;
             }
 
-            // ▼▼▼ 追加: 日付変更線対策 (Dateline Protection) ▼▼▼
-            // 直前のチェックで「継続NG」となったが、もし「そのさらに前日」に有効な記録があれば、
-            // 「時差による日付飛び」または「1日のうっかり忘れ」とみなしてチェーンをつなぐ。
-            
+            // --- 日付変更線対策 (Dateline Protection) ---
+            // 「記録忘れ」のみを救済し、「飲酒による失敗」は救済しないように修正
             const prevDate = checkDate.subtract(1, 'day');
             const prevStr = prevDate.format('YYYY-MM-DD');
             const prevLog = logMap.get(prevStr) || { hasBeer: false, hasExercise: false, balance: 0 };
             const prevCheck = checkMap.get(prevStr);
 
-            // 前日が有効条件を満たしているか確認
             const isPrevValid = (prevCheck === true) || 
                                 (!prevLog.hasBeer && prevCheck !== false) || 
                                 (prevLog.hasBeer && prevLog.balance >= -0.1);
 
-            if (isPrevValid) {
-                // 前日は有効だった = 今日だけ抜けている
-                // 日付を1日戻して continue することで、今回の「抜け」をスキップし、次のループで前日（有効）を判定させる
-                // ※この「抜けた日」自体は streak カウントには加算されないが、連続記録は途切れない
+            // ★ 修正：データが「未入力(undefined)」かつ「前日が有効」な場合のみスキップを許可する
+            if (isDry === undefined && !dayLogs.hasBeer && isPrevValid) {
                 checkDate = checkDate.subtract(1, 'day');
                 continue;
             }
-            // ▲▲▲ 追加終了 ▲▲▲
 
-            // ここまで来たらストリーク終了
+            // それ以外（飲酒記録がある、または前日も無効）なら、ここで完全にストリーク終了
             break;
             
             if (streak > 3650) break; // 無限ループガード
@@ -463,3 +457,4 @@ export const getVirtualDate = (timestamp = Date.now()) => {
     return date.format('YYYY-MM-DD');
 
 };
+
