@@ -1,6 +1,6 @@
-import { EXERCISE } from '../constants.js';
+import { EXERCISE, APP } from '../constants.js';
 import { getVirtualDate } from '../logic.js';
-import { showMessage, Feedback } from './dom.js';
+import { showMessage, Feedback,toggleModal } from './dom.js';
 import dayjs from 'https://cdn.jsdelivr.net/npm/dayjs@1.11.10/+esm';
 
 /**

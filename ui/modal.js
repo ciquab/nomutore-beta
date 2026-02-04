@@ -1072,7 +1072,7 @@ export const openLogDetail = (log) => {
     const btnShare = document.getElementById('btn-detail-share');
     if (btnShare) {
         btnShare.onclick = () => {
-            if(typeof Feedback !== 'undefined') Feedback.selection();
+            if(typeof Feedback !== 'undefined') Feedback.uiSwitch();
             closeModalFunc();
             setTimeout(() => {
                 Share.generateAndShare('beer', log);
@@ -1082,7 +1082,7 @@ export const openLogDetail = (log) => {
 
     // 編集ボタン
     document.getElementById('btn-detail-edit').onclick = () => {
-        if(typeof Feedback !== 'undefined') Feedback.selection();
+        if(typeof Feedback !== 'undefined') Feedback.uiSwitch();
         closeModalFunc();
         // CustomEventで編集リクエストを発火
         const event = new CustomEvent('request-edit-log', { detail: { id: log.id } });
@@ -1091,7 +1091,7 @@ export const openLogDetail = (log) => {
 
     // 削除ボタン
     document.getElementById('btn-detail-delete').onclick = () => {
-        if(typeof Feedback !== 'undefined') Feedback.selection();
+        if(typeof Feedback !== 'undefined') Feedback.uiSwitch();
         if(confirm('このログを削除しますか？')) {
             // CustomEventで削除リクエストを発火
             const event = new CustomEvent('request-delete-log', { detail: { id: log.id } });
@@ -1280,21 +1280,40 @@ export const openDayDetail = async (dateStr) => {
     // 5. ボタンのアクション設定
     // 「ログ追加」ボタン
     document.getElementById('btn-day-add-log').onclick = () => {
-    // 1. 日別詳細モーダルを閉じる
-    toggleModal('day-detail-modal', false);
+        // --- ここから下が「ボタンを押した時」にだけ実行される ---
+        
+        // 1. 日別詳細モーダルを閉じる
+        toggleModal('day-detail-modal', false);
 
-    // 2. 選択された日付を StateManager に保存
-    StateManager.setSelectedDate(dateStr);
+        // 2. 選択された日付を記録
+        StateManager.setSelectedDate(dateStr);
 
-    // 3. ラベルの日付を更新
-    const label = document.getElementById('day-add-selector-label');
-    if(label) label.textContent = dayjs(dateStr).format('MM/DD (ddd) に追加');
+        // 3. 次に表示される選択メニュー内のボタンの動きを「この日付用」に上書き
+        const beerBtn = document.getElementById('btn-day-selector-beer');
+        if (beerBtn) {
+            beerBtn.onclick = () => {
+                toggleModal('day-add-selector', false);
+                openBeerModal(null, dateStr); // 日付を渡す
+            };
+        }
 
-    // 4. 新しい選択メニューを開く
-    setTimeout(() => toggleModal('day-add-selector', true), 200);
-};
+        const exerciseBtn = document.getElementById('btn-day-selector-exercise');
+        if (exerciseBtn) {
+            exerciseBtn.onclick = () => {
+                toggleModal('day-add-selector', false);
+                openManualInput(dateStr); // 日付を渡す
+            };
+        }
 
-    // 「Daily Check」ボタン（元の機能）
+        // 4. ラベル更新
+        const label = document.getElementById('day-add-selector-label');
+        if(label) label.textContent = dayjs(dateStr).format('MM/DD (ddd) に追加');
+
+        // 5. 選択メニューを開く
+        setTimeout(() => toggleModal('day-add-selector', true), 200);
+    };
+
+    // 「Daily Check」ボタンも同様に包まれているか確認
     document.getElementById('btn-day-check').onclick = () => {
         toggleModal('day-detail-modal', false);
         setTimeout(() => openCheckModal(dateStr), 200);
