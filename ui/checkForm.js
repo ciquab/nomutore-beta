@@ -470,17 +470,6 @@ const getStoredSchema = () => {
     }
 };
 
-const getActiveSchemaFromIds = (ids) => {
-    const activeSchema = [];
-    const flatLibrary = Object.values(CHECK_LIBRARY).flat();
-    
-    ids.forEach(id => {
-        const item = flatLibrary.find(i => i.id === id);
-        if (item) activeSchema.push(item);
-    });
-    return activeSchema;
-};
-
 export const syncDryDayUI = (isDry) => {
     const items = document.querySelectorAll('.drinking-only');
     items.forEach(el => el.classList.toggle('hidden', isDry));
