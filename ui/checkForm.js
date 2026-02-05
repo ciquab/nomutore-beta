@@ -2,7 +2,7 @@ import { CHECK_SCHEMA, APP, CHECK_LIBRARY, CHECK_PRESETS, CHECK_DEFAULT_IDS, get
 import { getVirtualDate } from '../logic.js';
 import { db } from '../store.js';
 import { StateManager } from './state.js';
-import { DOM, toggleModal, showMessage, Feedback, toggleDryDay } from './dom.js';
+import { DOM, toggleModal, showMessage, Feedback } from './dom.js';
 import dayjs from 'https://cdn.jsdelivr.net/npm/dayjs@1.11.10/+esm';
 
 const ICON_KEYWORDS = {
@@ -68,7 +68,7 @@ export const openCheckModal = async (dateStr) => {
 
     const isDryCheck = document.getElementById('check-is-dry');
     if (isDryCheck) {
-        isDryCheck.onclick = (e) => syncDryDayUI(e.target.checked);
+    isDryCheck.onchange = (e) => syncDryDayUI(e.target.checked);
     }
 
     const setCheck = (id, val) => {
@@ -473,7 +473,6 @@ const getStoredSchema = () => {
 export const syncDryDayUI = (isDry) => {
     const items = document.querySelectorAll('.drinking-only');
     items.forEach(el => el.classList.toggle('hidden', isDry));
-    toggleDryDay(isDry);
 };
 
 /**

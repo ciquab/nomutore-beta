@@ -179,66 +179,55 @@ export const Service = {
 
             // ----------------------------------------
 
-            // 2. 変更日以降のすべての日付について再計算
-            const startDate = dayjs(changedTimestamp).startOf('day');
-            const today = dayjs().endOf('day');
+            // --- 2. 変更日以降のすべての日付について再計算 ---
+// ★物理日付ではなく、仮想日付（深夜4時まで前日）を起点にする
+const virtualStartDateStr = getVirtualDate(changedTimestamp);
+const startDate = dayjs(virtualStartDateStr).startOf('day');
+const today = dayjs().endOf('day'); // 今日まで計算
+
+let currentDate = startDate;
+let updateCount = 0;
+let safeGuard = 0;
+
+while (currentDate.isBefore(today) || currentDate.isSame(today, 'day')) {
+    if (safeGuard++ > 3650) break;
+
+    const dateStr = currentDate.format('YYYY-MM-DD');
+    
+    // その日のストリークを判定（logMapとcheckMapは既に仮想日付で作成されているため、これでOK）
+    const streak = Calc.getStreakFromMap(logMap, checkMap, firstDate, currentDate);
+    
+    // その日の運動ログを取得
+    const daysExerciseLogs = exerciseLogsByDate.get(dateStr) || [];
+    
+    for (const log of daysExerciseLogs) {
+        const mets = EXERCISE[log.exerciseKey]?.mets || 3.0;
+        const baseBurn = Calc.calculateExerciseBurn(mets, log.minutes, profile);
+        const updatedCredit = Calc.calculateExerciseCredit(baseBurn, streak);
+        
+        // メモの更新
+        let newMemo = log.memo || '';
+        newMemo = newMemo.replace(/Streak Bonus x[0-9.]+/g, '').trim();
+        if (updatedCredit.bonusMultiplier > 1.0) {
+            newMemo = newMemo ? `${newMemo} Streak Bonus x${updatedCredit.bonusMultiplier.toFixed(1)}` : `Streak Bonus x${updatedCredit.bonusMultiplier.toFixed(1)}`;
+        }
+
+        // 差分があればDB更新
+        if (Math.abs((log.kcal || 0) - updatedCredit.kcal) > 0.1 || log.memo !== newMemo) {
+            await db.logs.update(log.id, {
+                kcal: updatedCredit.kcal,
+                memo: newMemo
+            });
             
-            let currentDate = startDate;
-            let updateCount = 0;
-            let safeGuard = 0;
-
-            while (currentDate.isBefore(today) || currentDate.isSame(today, 'day')) {
-                if (safeGuard++ > 3650) break; // 無限ループ防止
-
-                // その日の文字列キーを取得
-                const dateStr = currentDate.format('YYYY-MM-DD');
-                
-                // その時点でのStreak (Optimized call)
-                const streak = Calc.getStreakFromMap(logMap, checkMap, firstDate, currentDate);
-                
-                // ボーナス倍率
-                const creditInfo = Calc.calculateExerciseCredit(100, streak); // 100はダミー
-                const bonusMultiplier = creditInfo.bonusMultiplier;
-
-                // ▼▼▼ 修正: Mapから一発で取得 (filterを使わない) ▼▼▼
-                const daysExerciseLogs = exerciseLogsByDate.get(dateStr) || [];
-                // ▲▲▲ 修正終了 ▲▲▲
-                
-                for (const log of daysExerciseLogs) {
-                    const profile = Store.getProfile(); // ループ内だが軽量なので許容、あるいはループ外に出すとなお良し
-                    const mets = EXERCISE[log.exerciseKey] ? EXERCISE[log.exerciseKey].mets : 3.0;
-                    const baseBurn = Calc.calculateExerciseBurn(mets, log.minutes, profile);
-                    const updatedCredit = Calc.calculateExerciseCredit(baseBurn, streak);
-                    
-                    // メモ欄の更新（"Streak Bonus x1.2" のような文字列を置換）
-                    let newMemo = log.memo || '';
-                    newMemo = newMemo.replace(/Streak Bonus x[0-9.]+/g, '').trim();
-                    
-                    if (bonusMultiplier > 1.0) {
-                        const bonusTag = `Streak Bonus x${bonusMultiplier.toFixed(1)}`;
-                        newMemo = newMemo ? `${newMemo} ${bonusTag}` : bonusTag;
-                    }
-
-                    // 値が変わる場合のみDB更新
-                    // トランザクション内なので await しても安全です
-                    if (Math.abs(log.kcal - updatedCredit.kcal) > 0.1 || log.memo !== newMemo) {
-                        await db.logs.update(log.id, {
-                            kcal: updatedCredit.kcal,
-                            memo: newMemo
-                        });
-
-                        const entry = logMap.get(dateStr);
-                        if (entry) {
-                            const diff = updatedCredit.kcal - (log.kcal || 0);
-                            entry.balance += diff; // 地図上の残高を更新！
-                            log.kcal = updatedCredit.kcal; // ログオブジェクトも更新
-                        }
-                        updateCount++;
-                    }
-                }
-
-                currentDate = currentDate.add(1, 'day');
-            }
+            // 地図上の残高も更新して、次の日の計算に繋げる
+            const entry = logMap.get(dateStr);
+            if (entry) entry.balance += (updatedCredit.kcal - (log.kcal || 0));
+            
+            updateCount++;
+        }
+    }
+    currentDate = currentDate.add(1, 'day');
+}
 
             if (updateCount > 0) {
                 console.log(`[Service] Recalculated ${updateCount} exercise logs due to streak change.`);
@@ -582,24 +571,16 @@ export const Service = {
     let dryDayCanceled = false;
     let untappdUrl = null;
 
-    if (data.isCustom) {
-        // カスタム入力
-        name = data.type === 'dry' ? '蒸留酒 (糖質ゼロ)' : '醸造酒/カクテル';
-        abv = data.abv;
-        const ml = data.ml;
-        carb = data.type === 'dry' ? 0.0 : 3.0;
-        kcal = Calc.calculateBeerDebit(ml, abv, carb, 1);
-    } else {
-        // プリセット選択
-        const spec = STYLE_SPECS[data.style] || STYLE_SPECS['Custom'];
-        abv = (data.userAbv !== undefined && !isNaN(data.userAbv)) ? data.userAbv : spec.abv;
-        carb = spec.carb;
-        
-        const sizeMl = parseInt(data.size); 
-        kcal = Calc.calculateBeerDebit(sizeMl, abv, carb, data.count);
-        name = `${data.style}`;
-        if (data.count !== 1) name += ` x${data.count}`;
-    }
+    // beerForm で確定済みの値をそのまま信頼する
+    const count = data.count ?? 1; 
+    abv = data.abv;
+    const ml = data.ml;
+    carb = data.carb ?? (data.isCustom ? (data.type === 'dry' ? 0.0 : 3.0) : (STYLE_SPECS[data.style]?.carb ?? 3.0));
+    kcal = Calc.calculateBeerDebit(ml, abv, carb, count);
+
+    name = data.isCustom
+        ? (data.type === 'dry' ? '蒸留酒 (糖質ゼロ)' : '醸造酒/カクテル')
+        : `${data.style}${count !== 1 ? ` x${count}` : ''}`;
 
     const logData = {
         timestamp: data.timestamp,
@@ -607,39 +588,38 @@ export const Service = {
         name: name,
         kcal: kcal, 
         style: data.isCustom ? 'Custom' : data.style,
-        size: data.isCustom ? data.ml : data.size,
-        count: data.isCustom ? 1 : data.count,
+        size: data.isCustom ? null : data.size, // UI用
+        rawAmount: ml,   
+        count,
         abv: abv,
         brewery: data.brewery,
         brand: data.brand,
         rating: data.rating,
         memo: data.memo,
         isCustom: data.isCustom,
-        customType: data.isCustom ? data.type : null,
-        rawAmount: data.isCustom ? data.ml : null
+        customType: data.isCustom ? data.type : null
     };
 
-    if (id) {
-        // 更新処理
-        await db.logs.update(parseInt(id), logData);
-    } else {
-        // 新規登録
-        await db.logs.add(logData);
-
-        // Untappd連携URLの準備
-            if (data.useUntappd && data.brewery && data.brand) {
-                const query = encodeURIComponent(`${data.brewery} ${data.brand}`);
-                // ★修正: letで宣言した変数に代入
-                untappdUrl = `https://untappd.com/search?q=${query}`;
+        // --- ログ保存（新規 or 更新） ---
+            if (id) {
+                await db.logs.update(parseInt(id), logData);
+            } else {
+               await db.logs.add(logData);
             }
-        }
 
-        // ★ ここからが重要：if/else の「外」に移動し、内容を強化します
-    // 2. その日の「すべての」チェックデータを取得（重複対策）
-    const ts = dayjs(data.timestamp);
-    const start = ts.startOf('day').valueOf();
-    const end = ts.endOf('day').valueOf();
+        // --- Untappd導線の生成（保存後に実行） ---
+            if (data.useUntappd && data.brewery && data.brand) {
+            const query = encodeURIComponent(`${data.brewery} ${data.brand}`);
+            untappdUrl = `https://untappd.com/search?q=${query}`;
+            }
+
+        // --- ★ここを修正：仮想日付（Virtual Date）に基づいてチェックを探す ---
+    const vDateStr = getVirtualDate(data.timestamp); // 深夜4時までなら前日の日付を取得
+    const vDay = dayjs(vDateStr);
+    const start = vDay.startOf('day').valueOf();
+    const end = vDay.endOf('day').valueOf();
     
+    // 物理的な timestamp ではなく、その「仮想日」の範囲で検索
     const existingChecks = await db.checks.where('timestamp').between(start, end, true, true).toArray();
 
     if (existingChecks.length > 0) {

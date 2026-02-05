@@ -1,4 +1,4 @@
-import { STYLE_SPECS, CALORIES, SIZE_DATA, STYLE_METADATA, APP } from '../constants.js';
+import { STYLE_SPECS, SIZE_DATA, CALORIES, STYLE_METADATA, APP } from '../constants.js';
 import { Calc, getVirtualDate } from '../logic.js';
 import { db } from '../store.js';
 import { showMessage, Feedback, toggleModal } from './dom.js';
@@ -41,10 +41,11 @@ export const openBeerModal = (e, dateStr = null, log = null) => {
         document.getElementById('beer-rating').value = log.rating || 0;
         document.getElementById('beer-memo').value = log.memo || '';
         
-        if (log.isCustom || log.type === 'brew') {
+        if (log.isCustom) {
             switchBeerInputTab('custom');
             document.getElementById('custom-abv').value = log.abv || 5.0;
-            document.getElementById('custom-amount').value = log.rawAmount || log.ml || 350;
+            document.getElementById('custom-amount').value =
+                Number.isFinite(log.ml) && log.ml > 0 ? log.ml : 350;
             // カスタムタイプの復元
             if (log.customType) {
                 const radio = document.querySelector(`input[name="customType"][value="${log.customType}"]`);
@@ -173,16 +174,17 @@ export const getBeerFormData = (existingLog = null) => {
     const isCustom = !document.getElementById('beer-input-custom').classList.contains('hidden');
     
     const styleSel = document.getElementById('beer-select');
-    const style = styleSel.options[styleSel.selectedIndex]?.value || '国産ピルスナー';
+    const style = styleSel.value || APP.DEFAULTS.MODE1;
     
     const sizeSel = document.getElementById('beer-size');
-    const size = sizeSel.options[sizeSel.selectedIndex]?.value || '350';
+    const size = sizeSel.value;
     
-    let count = parseInt(document.getElementById('beer-count').value) || 1;
-    if (count <= 0) count = 1; 
+    let count = parseInt(document.getElementById('beer-count').value);
+    if (!Number.isFinite(count) || count < 1) count = 1;
     
     const presetAbvInput = document.getElementById('preset-abv');
-    const userAbv = presetAbvInput ? parseFloat(presetAbvInput.value) : NaN;
+    const rawUserAbv = presetAbvInput ? parseFloat(presetAbvInput.value) : null;
+    const userAbv = Number.isFinite(rawUserAbv) ? rawUserAbv : null;
 
     let customAbv = Math.abs(parseFloat(document.getElementById('custom-abv').value) || 5.0);
     if (customAbv > 100) customAbv = 100;
@@ -204,16 +206,27 @@ export const getBeerFormData = (existingLog = null) => {
         type = (carb <= 0.5) ? 'dry' : 'sweet';
     }
 
+    let finalAbv, finalMl;
+
+    if (isCustom) {
+        finalAbv = customAbv;
+        finalMl = customMl;
+    } else {
+        const spec = STYLE_SPECS[style] || { abv: 5.0 };
+        finalAbv = userAbv ?? spec.abv;      // ユーザー補正があれば優先
+        finalMl = parseInt(size) || 350;     // サイズ選択値
+    }
+
     return {
         timestamp: ts,
         brewery, brand, rating, memo,
         style, size, count,
         isCustom,
         userAbv,
-        abv: customAbv,
-        ml: customMl,
+        abv: finalAbv,
+        ml: finalMl,
         carb: carb,
-        type: type,
+        customType: type,
         useUntappd
     };
 };
@@ -228,35 +241,41 @@ export const updateBeerKcalPreview = () => {
 
     try {
         const isCustom = !document.getElementById('beer-input-custom').classList.contains('hidden');
-        const count = parseInt(document.getElementById('beer-count').value) || 1;
+        let count = parseInt(document.getElementById('beer-count').value);
+        if (!Number.isFinite(count) || count < 1) count = 1;
 
-        // ▼▼▼ 修正点1: ここでまとめて宣言（const sizeMl... の行は削除しました） ▼▼▼
         let abv, carb, sizeMl;
 
         if (isCustom) {
-            // カスタムタブ: custom-amount から取得
-            sizeMl = parseInt(document.getElementById('custom-amount').value) || 350;
-            
-            abv = parseFloat(document.getElementById('custom-abv').value) || 5.0;
+            sizeMl = parseInt(document.getElementById('custom-amount').value);
+            if (!Number.isFinite(sizeMl) || sizeMl <= 0) sizeMl = 350;
+
+            const rawAbv = parseFloat(document.getElementById('custom-abv').value);
+            abv = Number.isFinite(rawAbv) ? rawAbv : 5.0;
+
             const typeEl = document.querySelector('input[name="customType"]:checked');
             const type = typeEl ? typeEl.value : 'sweet';
             carb = (type === 'dry') ? 0.0 : 3.0;
+
         } else {
-            // プリセットタブ: beer-size から取得
-            sizeMl = parseInt(document.getElementById('beer-size').value) || 0;
-            
+            sizeMl = parseInt(document.getElementById('beer-size').value) || 350;
+
             const styleKey = document.getElementById('beer-select').value;
             const spec = STYLE_SPECS[styleKey] || { abv: 5.0, carb: 3.5 };
-            const userAbvInput = document.getElementById('preset-abv').value;
-            abv = (userAbvInput !== "") ? parseFloat(userAbvInput) : spec.abv;
+
+            const rawUserAbv = parseFloat(document.getElementById('preset-abv').value);
+            abv = Number.isFinite(rawUserAbv) ? rawUserAbv : spec.abv;
+
             carb = spec.carb;
         }
 
-        // カロリー計算
-        const kcal = Math.abs(Calc.calculateBeerDebit(sizeMl, abv, carb, count));
-        previewEl.innerHTML = `${Math.round(kcal)} <span class="text-[10px] font-bold ml-1 text-gray-400">kcal</span>`;
+        const kcal = Calc.calculateBeerDebit(sizeMl, abv, carb, count);
+
+        previewEl.innerHTML =
+            `${Math.round(kcal)} <span class="text-[10px] font-bold ml-1 text-gray-400">kcal</span>`;
+
     } catch (e) {
-        console.error(e); // エラーが見えるようにログに出力
+        console.error(e);
     }
 };
 

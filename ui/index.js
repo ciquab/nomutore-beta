@@ -52,6 +52,9 @@ export const refreshUI = async () => {
         // ここで既に重複排除もバランス計算も終わっています
         const { logs, checks, allLogs, balance } = await Service.getAppDataSnapshot();
 
+        UI._statsData.periodLogs = logs;
+        UI._statsData.allLogs = allLogs;
+
         // 2. あとは描画関数に渡すだけ
         renderBeerTank(balance);
         renderLiverRank(checks, allLogs);
@@ -78,6 +81,11 @@ export const refreshUI = async () => {
 };
 
 export const UI = {
+    _statsData: {
+    periodLogs: [],
+    allLogs: []
+    },
+
     setFetchLogsHandler: (fn) => { setFetchLogsHandler(fn); },
     _fetchAllDataHandler: null,
     setFetchAllDataHandler: (fn) => { UI._fetchAllDataHandler = fn; },
@@ -692,14 +700,7 @@ if (checkModal) {
             activeEl.classList.remove('hidden');
             (async () => {
                 if (mode === 'stats') {
-                    // ★ここを修正
-                    // 1. 現在の期間（今週/月）のデータを取得
-                    const { logs: periodLogs } = await Service.getAppDataSnapshot();
-                    // 2. データベースから全てのメインログを取得
-                    const allLogs = await db.logs.toArray();
-                    
-                    // 両方を渡して描画
-                    renderBeerStats(periodLogs, allLogs);
+                    // 何もしない（refreshUIが描画する）
                 } else if (mode === 'archives') {
                     renderArchives();
                 }
@@ -747,40 +748,43 @@ if (checkModal) {
      */
     handleRepeat: async (log) => {
     try {
-        // 直接 Service を呼ぶのではなく、イベントを発生させる
         if (log.type === 'beer') {
-            // Service.repeatLog を介さず、直接 save-beer イベントを飛ばして
-            // index.js 側のリスナーに演出と保存を任せる
-            const event = new CustomEvent('save-beer', { 
+            document.dispatchEvent(new CustomEvent('save-beer', {
                 detail: {
-                    // ★修正: ここで { data: ... } の形に包む必要があります！
                     data: {
-                        ...log,
                         timestamp: Date.now(),
-                        isCustom: false,
-                        useUntappd: false // リピート時は自動起動しない
+                        brewery: log.brewery || '',
+                        brand: log.brand || '',
+                        rating: log.rating || 0,
+                        memo: log.memo || '',
+                        style: log.style || '国産ピルスナー',
+                        size: String(log.size || 350),
+                        count: log.count || 1,
+                        isCustom: log.isCustom || false,
+                        userAbv: log.userAbv ?? NaN,
+                        abv: log.abv ?? 5.0,
+                        ml: log.ml ?? 350,
+                        carb: log.carb ?? 3.0,
+                        type: log.type ?? 'sweet',   // ★修正
+                        useUntappd: false
                     },
-                    existingId: null // 新規作成であることを明示
-                } 
-            });
-            document.dispatchEvent(event);
+                    existingId: null
+                }
+            }));
+        }
 
-        } else if (log.type === 'exercise') {
-            // 運動の方は変更なし（受け取り手がフラットな構造を期待しているため）
-            const event = new CustomEvent('save-exercise', { 
+        else if (log.type === 'exercise') {
+            document.dispatchEvent(new CustomEvent('save-exercise', {
                 detail: {
                     exerciseKey: log.exerciseKey,
                     minutes: log.minutes,
                     date: Date.now(),
                     applyBonus: true,
                     id: null
-                } 
-            });
-            document.dispatchEvent(event);
+                }
+            }));
         }
 
-        // ※イベントリスナー側で refreshUI() が呼ばれるため、ここでの実行は不要です。
-        
     } catch (e) {
         console.error('Repeat Error:', e);
         showMessage('登録に失敗しました', 'error');
