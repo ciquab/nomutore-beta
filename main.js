@@ -14,6 +14,8 @@ import { actionRouter, initActionRouter } from './ui/actionRouter.js';
 
 import dayjs from 'https://cdn.jsdelivr.net/npm/dayjs@1.11.10/+esm';
 
+window.DataManager = DataManager;
+
 /**
  * FileInput の change イベント登録
  * （data-action では扱えないため個別に登録）
