@@ -1,56 +1,12 @@
 /**
  * ui/actionRouter.js
- * Phase 2対応: ナビゲーション制御を追加
+ * Phase 2対応: 循環依存を解消
  */
-
-import { UI } from './index.js';
-
-const ACTION_MAP = {
-    // --- ナビゲーション (Phase 3 Group A用) ---
-    'switch-tab': (data) => UI.switchTab(data.tab), // data-tab="home" etc.
-    
-    // --- モダル制御 ---
-    'toggle-modal': (data) => UI.toggleModal(data.target),
-    'close-modal': (data) => UI.closeModal(data.target),
-    
-    // --- 記録フォーム ---
-    'open-check': (data) => UI.openCheckModal(data.date),
-    'open-beer': (data) => UI.openBeerModal(null, data.date),
-    'open-exercise': (data) => UI.openManualInput(data.date),
-    
-    // --- 詳細・リスト操作 ---
-    'open-day-detail': (data) => UI.openDayDetail(data.date),
-    'toggle-edit-mode': () => UI.toggleEditMode(),
-    'toggle-select-all': () => UI.toggleSelectAll(),
-    'delete-selected': () => UI.deleteSelectedLogs(),
-    
-    // --- その他機能 ---
-    'share': () => UI.openShareModal(),
-    'open-settings': () => UI.renderSettings(),
-    'open-help': () => UI.openHelp(),
-    'open-timer': () => UI.openTimer(),
-};
-
-const handleGlobalClick = (event) => {
-    const target = event.target.closest('[data-action]');
-    if (!target) return;
-
-    const actionName = target.dataset.action;
-    const handler = ACTION_MAP[actionName];
-
-    if (handler) {
-        event.preventDefault();
-        handler(target.dataset, event);
-        console.debug(`[ActionRouter] Executed: ${actionName}`, target.dataset);
-    } else {
-        console.warn(`[ActionRouter] Unknown action: ${actionName}`);
-    }
-};
 
 /**
  * ActionRouter - Complete Implementation
- * HTML属性ベースのイベントハンドリングシステム（完全版）
- * window汚染を防ぎ、イベントハンドラーを集中管理します
+ * HTML属性ベースのイベントハンドリングシステム
+ * UIモジュールに依存せず、純粋なイベントルーターとして動作
  */
 
 export class ActionRouter {
@@ -108,10 +64,10 @@ export class ActionRouter {
         } catch (error) {
             console.error(`[ActionRouter] Error in handler for "${action}":`, error);
             
-            // ユーザーにエラー通知（UIがある場合）
-            if (window.UI && window.UI.showMessage) {
-                window.UI.showMessage('操作中にエラーが発生しました', 'error');
-            }
+            // エラー時はカスタムイベントを発火（UI層で処理）
+            document.dispatchEvent(new CustomEvent('action-error', {
+                detail: { action, error: error.message }
+            }));
         }
     }
 
@@ -130,15 +86,32 @@ export class ActionRouter {
             if (!target) return;
 
             const action = target.dataset.action;
-            const argsStr = target.dataset.args;
             
+            // 引数の取得（複数の方法をサポート）
             let args;
-            try {
-                // JSON形式の引数をパース
-                args = argsStr ? JSON.parse(argsStr) : undefined;
-            } catch (err) {
-                console.error(`[ActionRouter] Failed to parse args for "${action}":`, argsStr);
-                args = argsStr; // フォールバック: 文字列として渡す
+            
+            // 1. data-args 属性 (JSON形式)
+            if (target.dataset.args) {
+                try {
+                    args = JSON.parse(target.dataset.args);
+                } catch (err) {
+                    console.error(`[ActionRouter] Failed to parse args:`, target.dataset.args);
+                    args = target.dataset.args; // フォールバック
+                }
+            }
+            // 2. data-payload 属性 (repeat アクション用)
+            else if (target.dataset.payload) {
+                try {
+                    args = JSON.parse(target.dataset.payload);
+                } catch (err) {
+                    console.error(`[ActionRouter] Failed to parse payload:`, target.dataset.payload);
+                    args = target.dataset.payload;
+                }
+            }
+            // 3. その他の data-* 属性をすべて渡す
+            else if (Object.keys(target.dataset).length > 1) {
+                args = { ...target.dataset };
+                delete args.action; // action自体は除外
             }
 
             this.handle(action, args, e);
@@ -196,4 +169,5 @@ export const actionRouter = new ActionRouter();
  */
 export const initActionRouter = () => {
     actionRouter.init();
+    console.log('[ActionRouter] ✅ Initialized and ready');
 };

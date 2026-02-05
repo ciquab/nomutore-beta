@@ -98,7 +98,10 @@ const renderActionMenuBeerPresets = async () => {
             const kcal = Math.abs(Math.round(beer.kcal / (beer.count || 1))); // 1本当たりのカロリー
 
             html += `
-                <button onclick="handleRepeat(${jsonParam}); UI.closeModal('action-menu-modal');" 
+                <button  data-action="repeat" 
+                         data-payload='${jsonParam}' 
+                         data-on-success="modal:close" 
+                         data-on-success-param="action-menu-modal" 
                         class="w-full flex items-center gap-3 p-4 rounded-2xl border active:scale-95 transition shadow-sm hover:brightness-95 ${bgClass} group">
                     <div class="w-10 h-10 rounded-full bg-white dark:bg-base-900 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-110 transition">
                         <i class="ph-duotone ph-beer-bottle ${iconColor} text-xl"></i>
@@ -120,7 +123,7 @@ const renderActionMenuBeerPresets = async () => {
         });
     } else {
         html += `
-            <button onclick="UI.openBeerModal(); UI.closeModal('action-menu-modal');" class="w-full p-4 rounded-xl border border-dashed border-gray-300 dark:border-gray-700 text-gray-400 text-xs font-bold flex items-center justify-center gap-2">
+            <button data-action="beer:openFirst" data-close-modal="action-menu-modal" UI.closeModal('action-menu-modal');" class="w-full p-4 rounded-xl border border-dashed border-gray-300 dark:border-gray-700 text-gray-400 text-xs font-bold flex items-center justify-center gap-2">
                 <i class="ph-bold ph-plus"></i> Log First Beer
             </button>
         `;
@@ -161,11 +164,14 @@ const renderActionMenuExerciseShortcuts = async () => {
             const jsonParam = JSON.stringify(repeatPayload).replace(/"/g, "&quot;");
             const safeName = escapeHtml(log.name);
 
-            // ★修正: HTML属性 onclick="handleRepeat(...)" を使用
+            // ★修正:  data-action="repeat" に変更済み
             // これにより、window.handleRepeat が呼ばれ、スコープエラーを回避できます
             const btn = document.createElement('div'); // innerHTMLでボタンを作るためラッパーdiv
             btn.innerHTML = `
-            <button onclick="handleRepeat(${jsonParam}); UI.closeModal('action-menu-modal');"
+            <button  data-action="repeat" 
+                     data-payload='${jsonParam}' 
+                     data-on-success="modal:close" 
+                     data-on-success-param="action-menu-modal"
                     class="w-full flex items-center gap-3 p-4 mb-2 rounded-2xl border border-gray-100 dark:border-gray-800 bg-indigo-50 dark:bg-indigo-900/20 active:scale-95 transition shadow-sm hover:bg-indigo-100 dark:hover:bg-indigo-900/40 group">
                 <div class="w-10 h-10 rounded-full bg-white dark:bg-indigo-800 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-110 transition">
                     <i class="ph-duotone ph-sneaker-move text-xl text-indigo-500 dark:text-indigo-300"></i>
@@ -512,7 +518,10 @@ export const renderRecordTabShortcuts = async () => {
                 const jsonParam = JSON.stringify(repeatPayload).replace(/"/g, "&quot;");
 
                 html += `
-                    <button onclick="handleRepeat(${jsonParam})" 
+                    <button  data-action="repeat" 
+                             data-payload='${jsonParam}' 
+                             data-on-success="modal:close" 
+                             data-on-success-param="action-menu-modal" 
                             class="flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl border active:scale-95 transition shadow-sm ${bgClass} min-w-[130px]">
                         <div class="flex-shrink-0 w-8 h-8 rounded-full bg-white/50 dark:bg-black/20 flex items-center justify-center">
                              <i class="ph-duotone ph-beer-bottle ${iconColor} text-lg"></i>
@@ -550,7 +559,10 @@ export const renderRecordTabShortcuts = async () => {
                 const safeName = escapeHtml(log.name);
 
                 html += `
-                    <button onclick="handleRepeat(${jsonParam})" 
+                    <button  data-action="repeat" 
+                             data-payload='${jsonParam}' 
+                             data-on-success="modal:close" 
+                             data-on-success-param="action-menu-modal" 
                             class="flex-shrink-0 flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl shadow-sm active:scale-95 transition hover:border-indigo-300 dark:hover:border-indigo-500 min-w-[130px]">
                         <div class="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-500">
                             <i class="ph-duotone ph-sneaker-move"></i>
@@ -585,8 +597,8 @@ export const handleRolloverAction = async (action) => {
     } else if (action === 'new_custom') {
         // 設定画面へ移動
         // ★注意: UIオブジェクトはまだ作られていない可能性があるため、window.UI経由かDOM操作で移動
-        if (window.UI && window.UI.switchTab) {
-            window.UI.switchTab('settings');
+        if (UI && UI.switchTab) {
+            UI.switchTab('settings');
         } else {
             // フォールバック: タブボタンを直接クリック
             const settingsTab = document.getElementById('nav-tab-settings');
@@ -676,19 +688,19 @@ export const showRolloverModal = () => {
         btnWeekly.className = "w-full py-3.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-500/30 active:scale-95 transition-all flex items-center justify-center gap-2 mb-3";
         btnWeekly.innerHTML = `<i class="ph-bold ph-arrows-clockwise"></i><span>Switch to Weekly</span>`;
         // UIがグローバルにある前提、またはimportが必要ですが、安全策としてonclick属性を使うか、window.UI経由で呼びます
-        btnWeekly.onclick = () => window.UI.handleRolloverAction('weekly');
+        btnWeekly.dataset.action = 'rollover:weekly';
 
         // 2. 新規プロジェクト
         const btnNew = document.createElement('button');
         btnNew.className = "w-full py-3.5 px-4 bg-white dark:bg-base-800 text-indigo-600 dark:text-indigo-400 border-2 border-indigo-100 dark:border-indigo-900 rounded-xl font-bold active:scale-95 transition-all flex items-center justify-center gap-2 mb-3";
         btnNew.innerHTML = `<i class="ph-bold ph-plus"></i><span>New Project</span>`;
-        btnNew.onclick = () => window.UI.handleRolloverAction('new_custom');
+        btnWeekly.dataset.action = 'rollover:new_custom';
 
         // 3. 延長
         const btnExtend = document.createElement('button');
         btnExtend.className = "w-full py-2 px-4 text-xs font-bold text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 active:scale-95 transition-all";
         btnExtend.textContent = "Extend this period";
-        btnExtend.onclick = () => window.UI.handleRolloverAction('extend');
+        btnWeekly.dataset.action = 'rollover:extend';
 
         actionsContainer.appendChild(btnWeekly);
         actionsContainer.appendChild(btnNew);
