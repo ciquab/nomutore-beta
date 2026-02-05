@@ -2,7 +2,7 @@ import { APP, EXERCISE, SIZE_DATA, CALORIES } from './constants.js';
 import { Store, ExternalApp, db } from './store.js'; 
 import { Calc } from './logic.js';
 import { UI, StateManager, updateBeerSelectOptions, refreshUI, toggleModal, showMessage, initHandleRepeatDelegation } from './ui/index.js';
-import { showConfetti } from './ui/dom.js';
+import { showConfetti, showMessage } from './ui/dom.js';
 import { Service } from './service.js';
 import { Timer } from './ui/timer.js';
 import { DataManager } from './dataManager.js';
