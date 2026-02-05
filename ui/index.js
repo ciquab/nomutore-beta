@@ -17,11 +17,11 @@ import { Timer } from './timer.js';
 import { Share } from './share.js';
 
 import { 
-    renderSettings, openHelp, openLogDetail, 
+    renderSettings, openHelp, 
     updateModeSelector, renderQuickButtons, closeModal,
     openTimer, closeTimer,
     openActionMenu, handleSaveSettings, 
-    validateInput, openDayDetail as _originalOpenDayDetail, handleRolloverAction,
+    validateInput, handleRolloverAction,
     renderRecordTabShortcuts, // ★新規追加
     openShareModal, // ★新規追加
     showRolloverModal
@@ -39,6 +39,7 @@ import {
 } from './beerForm.js';
 import { getExerciseFormData, openManualInput } from './exerciseForm.js';
 import { renderCheckEditor, openCheckModal, getCheckFormData } from './checkForm.js';
+import * as LogDetail from './logDetail.js';
 
 import dayjs from 'https://cdn.jsdelivr.net/npm/dayjs@1.11.10/+esm';
 
@@ -732,13 +733,13 @@ if (checkModal) {
         }
     },
 
-    // ★追加: HTMLのonclick属性から呼べるように公開する
-    openLogDetail: (id) => {
+    openLogDetail: async (id) => {
         Feedback.tap();
-        // idからログデータを取得して詳細モーダルを開く
-        db.logs.get(id).then(log => {
-            if (log) openLogDetail(log);
-        });
+        const log = await db.logs.get(parseInt(id));
+        if (log) {
+            // 「LogDetailファイルの openLogDetail を呼ぶ」と明確にわかる
+            LogDetail.openLogDetail(log); 
+        }
     },
 
     /**
@@ -821,18 +822,9 @@ if (checkModal) {
     applyTheme: applyTheme,
     toggleDryDay: toggleDryDay,
 
-    openDayDetail: async (date) => {
-        // 1. Serviceから全データを取得
-        const { allLogs } = await Service.getAppDataSnapshot();
-        
-        // 2. クリックされた日付のログを全データから抽出
-        const targetDateStr = dayjs(date).format('YYYY-MM-DD');
-        const dayLogs = allLogs.filter(log => 
-            dayjs(log.timestamp).format('YYYY-MM-DD') === targetDateStr
-        );
-
-        // 3. modal.jsから読み込んだ元の関数に、抽出したデータを渡す
-        _originalOpenDayDetail(date, dayLogs);
+    openDayDetail: (date) => {
+        // 「LogDetailファイルの openDayDetail を呼ぶ」
+        LogDetail.openDayDetail(date);
     },
           
     handleRolloverAction: handleRolloverAction, 

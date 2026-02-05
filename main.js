@@ -9,6 +9,8 @@ import { initErrorHandler } from './errorHandler.js';
 import { handleSaveSettings } from './ui/modal.js'; 
 import { CloudManager } from './cloudManager.js';
 import { Onboarding } from './ui/onboarding.js';
+import { initActionRouter } from './ui/actionRouter.js'; 
+
 import dayjs from 'https://cdn.jsdelivr.net/npm/dayjs@1.11.10/+esm';
 
 // HTMLからonclickで呼ぶためにwindowオブジェクトに登録
@@ -123,6 +125,8 @@ const initApp = async () => {
     try {
         console.log('App Initializing...');
 
+        initActionRouter();
+
         // 1. スマート・スプラッシュ判定 (Smart Splash Logic)
         const isOnboarded = localStorage.getItem('nomutore_onboarding_complete');
         const lastLaunchKey = 'nomutore_last_launch_ts';
@@ -178,6 +182,7 @@ const initApp = async () => {
 
         // 4. Load & Verify Data
         updateBeerSelectOptions(); 
+        generateSettingsOptions();
         UI.applyTheme(localStorage.getItem(APP.STORAGE_KEYS.THEME) || 'system');
 
         // 当日のチェックレコードを確保（なければ作成）
