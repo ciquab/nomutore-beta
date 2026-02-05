@@ -14,10 +14,10 @@ import { actionRouter, initActionRouter } from './ui/actionRouter.js';
 import dayjs from 'https://cdn.jsdelivr.net/npm/dayjs@1.11.10/+esm';
 
 // ★ 削除: window汚染を段階的に削除
-// window.UI = UI;  // ← コメントアウト（後で完全削除）
-// window.DataManager = DataManager;
-// window.Onboarding = Onboarding;
-// window.Timer = Timer;
+window.UI = UI;  // ← コメントアウト（後で完全削除）
+window.DataManager = DataManager;
+window.Onboarding = Onboarding;
+window.Timer = Timer;
 
 
 /**
