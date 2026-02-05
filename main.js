@@ -133,6 +133,19 @@ const registerActions = () => {
             setTimeout(() => UI.openCheckModal(UI.selectedDate), 200);
         },
 
+       // ========== DayDetail系 (追加) ==========
+        'open-day-detail': (data) => {
+            if (UI && UI.openDayDetail) {
+                UI.openDayDetail(data.date);
+            }
+        },
+        
+        // もし logList.js の修正も反映させるなら、これも必要です
+        'open-log-detail': (data) => {
+            if (UI && UI.openLogDetail) {
+                UI.openLogDetail(data.id);
+            }
+
         // ========== Beer系 ==========
 
         'beer:openFirst': () => {
