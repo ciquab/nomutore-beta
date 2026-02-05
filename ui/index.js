@@ -111,7 +111,6 @@ export const UI = {
         const bind = (id, event, fn) => {
             const el = document.getElementById(id);
             if(el) el.addEventListener(event, fn);
-
         };
 
         // 🍺 ビール保存
@@ -576,6 +575,8 @@ if (checkModal) {
             fab.classList.remove('scale-0', 'opacity-0', 'pointer-events-none');
         }
 
+        window.handleRepeat = UI.handleRepeat;
+
         UI.isInitialized = true;
     },
 
@@ -832,26 +833,4 @@ export {
 };
 
 
-export const initHandleRepeatDelegation = () => {
-    document.addEventListener('click', (e) => {
-        const target = e.target.closest('[data-action="repeat"]');
-        if (!target) return;
-        
-        try {
-            const payload = JSON.parse(target.dataset.payload);
-            UI.handleRepeat(payload);
-            
-            // オプション: 成功後のアクション
-            const onSuccess = target.dataset.onSuccess;
-            const onSuccessParam = target.dataset.onSuccessParam;
-            if (onSuccess && onSuccessParam) {
-                // 例: modal:close → toggleModal(param, false)
-                if (onSuccess === 'modal:close') {
-                    toggleModal(onSuccessParam, false);
-                }
-            }
-        } catch (err) {
-            console.error('[handleRepeat] Error:', err);
-        }
-    });
-};
+

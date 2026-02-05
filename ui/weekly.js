@@ -135,7 +135,7 @@ export async function renderWeeklyAndHeatUp(logs, checks) {
 
             html += `
                 <div class="aspect-square rounded-xl ${bgClass} ${borderClass} flex items-center justify-center ${textClass} transition-all hover:scale-105 active:scale-95 cursor-pointer relative group"
-                     data-action="open-day-detail" data-args='{"date": "${d.format('YYYY-MM-DD')}"}'>
+                     onclick="UI.openDayDetail('${d.format('YYYY-MM-DD')}')">
                     ${iconHtml}
                     ${isToday ? '<span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-indigo-500 rounded-full border-2 border-white dark:border-gray-900"></span>' : ''}
                 </div>
@@ -249,7 +249,7 @@ export function renderHeatmap(checks, logs, profile) {
         html += `
             <div class="heatmap-cell aspect-square rounded-lg flex flex-col items-center justify-center cursor-pointer transition hover:scale-110 active:scale-95 ${bgClass} ${textClass} relative"
                  title="${d.format('YYYY-MM-DD')}: ${status}"
-                 data-action="open-day-detail" data-args='{"date": "${d.format('YYYY-MM-DD')}"}'>
+                 onclick="UI.openDayDetail('${d.format('YYYY-MM-DD')}')">
                 <span class="text-sm leading-none select-none filter drop-shadow-sm">${content}</span>
             </div>
         `;

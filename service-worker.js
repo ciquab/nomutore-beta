@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nomutore-v0.0.9';
+const CACHE_NAME = 'nomutore-v0.0.7';
 const APP_SHELL = [
     './',
     './index.html',

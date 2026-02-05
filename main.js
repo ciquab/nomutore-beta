@@ -1,8 +1,7 @@
 import { APP, EXERCISE, SIZE_DATA, CALORIES } from './constants.js';
 import { Store, ExternalApp, db } from './store.js'; 
 import { Calc } from './logic.js';
-import { UI, StateManager, updateBeerSelectOptions, refreshUI, toggleModal, initHandleRepeatDelegation } from './ui/index.js';
-import { showConfetti, showMessage } from './ui/dom.js';
+import { UI, StateManager, updateBeerSelectOptions, refreshUI, toggleModal } from './ui/index.js';
 import { Service } from './service.js';
 import { Timer } from './ui/timer.js';
 import { DataManager } from './dataManager.js';
@@ -10,227 +9,17 @@ import { initErrorHandler } from './errorHandler.js';
 import { handleSaveSettings } from './ui/modal.js'; 
 import { CloudManager } from './cloudManager.js';
 import { Onboarding } from './ui/onboarding.js';
-import { actionRouter, initActionRouter } from './ui/actionRouter.js';
+import { initActionRouter } from './ui/actionRouter.js'; 
 
 import dayjs from 'https://cdn.jsdelivr.net/npm/dayjs@1.11.10/+esm';
 
-window.DataManager = DataManager;
+// HTMLからonclickで呼ぶためにwindowオブジェクトに登録
 window.UI = UI;
+window.DataManager = DataManager;
+window.Onboarding = Onboarding;
 
-/**
- * FileInput の change イベント登録
- * （data-action では扱えないため個別に登録）
- */
-export const setupFileInputHandlers = () => {
-    const importFileInput = document.getElementById('import-file');
-    if (importFileInput) {
-        importFileInput.addEventListener('change', function(e) {
-            DataManager.importJSON(this);
-        });
-    }
-};
-
-// ========================================
-// ActionRouter への登録（新規追加）
-// ========================================
-
-/**
- * 【重要】DOMContentLoaded の中で actionRouter.init() を呼ぶ前に
- * すべてのアクションを登録しておく必要があります
- */
-const registerActions = () => {
-    actionRouter.registerBulk({
-        // ========== UI系 ==========
-        'ui:switchTab': (tabName) => UI.switchTab(tabName),
-        'ui:switchCellarView': (viewName) => UI.switchCellarViewHTML(viewName),
-        'ui:applyTheme': () => {
-            const isDark = document.documentElement.classList.contains('dark');
-            UI.applyTheme(isDark ? 'light' : 'dark');
-        },
-        
-        // ========== Modal系 ==========
-        'modal:open': (modalId) => toggleModal(modalId, true),
-        'modal:close': (modalId) => toggleModal(modalId, false),
-        'modal:toggle': (modalId) => {
-            const modal = document.getElementById(modalId);
-            const isVisible = modal && !modal.classList.contains('hidden');
-            toggleModal(modalId, !isVisible);
-        },
-        'modal:openBeer': () => UI.openBeerModal(),
-        'modal:openExercise': () => UI.openManualInput(),
-        'modal:openCheck': () => UI.openCheckModal(),
-        'modal:openSettings': () => toggleModal('settings-modal', true),
-        'modal:openTimer': () => openTimer(),
-        'modal:closeTimer': () => closeTimer(),
-        'modal:openHelp': (section) => openHelp(section),
-        'modal:openActionMenu': () => openActionMenu(),
-        'modal:openCheckLibrary': () => {
-            import('./ui/modal.js').then(m => m.openCheckLibrary());
-        },
-        
-        // ========== Data系 ==========
-        'data:exportCSV': (type) => DataManager.exportCSV(type),
-        'data:exportJSON': () => DataManager.exportJSON(),
-        'data:importJSON': () => DataManager.importJSON(),
-        'data:backupToCloud': () => DataManager.backupToCloud(),
-        'data:restoreFromCloud': () => DataManager.restoreFromCloud(),
-        'data:triggerImportFile': () => {
-            const fileInput = document.getElementById('import-file');
-            if (fileInput) fileInput.click();
-        },
-        
-        // ========== Log系 ==========
-        'log:deleteSelected': () => {
-            import('./ui/logList.js').then(m => m.deleteSelectedLogs());
-        },
-        'log:toggleEditMode': () => UI.toggleEditMode(),
-        'log:toggleSelectAll': () => UI.toggleSelectAll(),
-        
-        // ========== Check系 ==========
-        'check:applyPreset': (presetName) => {
-            if (typeof applyPreset === 'function') {
-                applyPreset(presetName);
-            }
-        },
-        'check:applyLibraryChanges': () => {
-            if (typeof applyLibraryChanges === 'function') {
-                applyLibraryChanges();
-            }
-        },
-        'check:addNewItem': () => {
-            if (typeof addNewCheckItem === 'function') {
-                addNewCheckItem();
-            }
-        },
-        
-        'check:toggleDryDay': (checked) => UI.toggleDryDay(checked),
-        
-        // ========== Onboarding系 ==========
-        'onboarding:close': () => Onboarding.closeLandingPage(),
-        'onboarding:nextStep': () => Onboarding.nextStep(),
-        'onboarding:prevStep': () => Onboarding.prevStep(),
-        'onboarding:finish': () => Onboarding.finish(),
-        'onboarding:goToWizard': () => Onboarding.goToWizard(),
-        
-        // ========== Timer系 ==========
-        'timer:toggle': () => Timer.toggle(),
-        'timer:finish': () => Timer.finish(),
-        'timer:reset': () => Timer.reset(),
-        
-        // ========== Settings系 ==========
-        'settings:save': () => handleSaveSettings(),
-        
-        // ========== Day Add Selector系 ==========
-        'dayAdd:openBeer': () => {
-            toggleModal('day-add-selector', false);
-            setTimeout(() => UI.openBeerModal(UI.selectedDate), 200);
-        },
-        'dayAdd:openExercise': () => {
-            toggleModal('day-add-selector', false);
-            setTimeout(() => UI.openManualInput(UI.selectedDate), 200);
-        },
-        'dayAdd:openCheck': () => {
-            toggleModal('day-add-selector', false);
-            setTimeout(() => UI.openCheckModal(UI.selectedDate), 200);
-        },
-
-       // ========== DayDetail系 (追加) ==========
-        'open-day-detail': (data) => {
-            if (UI && UI.openDayDetail) {
-                UI.openDayDetail(data.date);
-            }
-        },
-        
-        // もし logList.js の修正も反映させるなら、これも必要です
-        'open-log-detail': (data) => {
-            if (UI && UI.openLogDetail) {
-                UI.openLogDetail(data.id);
-            }
-        },
-        // ========== Beer系 ==========
-
-        'beer:openFirst': () => {
-            UI.openBeerModal();
-            toggleModal('action-menu-modal', false);
-        },
-
-
-        // ========== Repeat系 ==========
-        'repeat': (payload, event) => {
-            UI.handleRepeat(payload);
-    
-            // イベント元の要素から data-on-success 属性を取得
-            const target = event.target.closest('[data-action="repeat"]');
-            if (target) {
-                const onSuccess = target.dataset.onSuccess;
-                const param = target.dataset.onSuccessParam;
-        
-                if (onSuccess === 'modal:close' && param) {
-                    setTimeout(() => toggleModal(param, false), 100);
-                }
-            }
-        },
-
-        // ========== Help系 ==========
-        'help:goToSettings': () => {
-            UI.switchTab('settings');
-            toggleModal('help-modal', false);
-        },
-        
-        // ========== System系 ==========
-        'system:reload': () => location.reload(),
-        
-        // ========== 後方互換性エイリアス（段階的削除対象） ==========
-        'share:open': () => UI.openShareModal(),
-        'open-help': (section) => openHelp(section),
-        'toggle-edit-mode': () => UI.toggleEditMode(),
-        'toggle-select-all': () => UI.toggleSelectAll(),
-        'delete-selected': () => {
-            import('./ui/logList.js').then(m => m.deleteSelectedLogs());
-        },
-        'switch-tab': (tabName) => UI.switchTab(tabName),
-        'close-modal': (modalId) => toggleModal(modalId, false),
-        'toggle-modal': (modalId) => {
-            const modal = document.getElementById(modalId);
-            const isVisible = modal && !modal.classList.contains('hidden');
-            toggleModal(modalId, !isVisible);
-        },
-
-        // ========== Rollover系 (追加) ==========
-        'rollover:weekly': async () => {
-            toggleModal('rollover-modal', false);
-            await Service.updatePeriodSettings('weekly');
-            showConfetti();
-            showMessage('Weeklyモードに戻りました', 'success');
-            document.dispatchEvent(new CustomEvent('refresh-ui'));
-        },
-        
-        'rollover:new_custom': () => {
-            toggleModal('rollover-modal', false);
-            UI.switchTab('settings');
-            setTimeout(() => {
-                showMessage('新しい期間を設定してください', 'info');
-                const pMode = document.getElementById('setting-period-mode');
-                if(pMode) {
-                    pMode.value = 'custom';
-                    pMode.dispatchEvent(new Event('change'));
-                }
-            }, 300);
-        },
-        
-        'rollover:extend': () => {
-            toggleModal('rollover-modal', false);
-            const currentEnd = parseInt(localStorage.getItem(APP.STORAGE_KEYS.PERIOD_END_DATE)) || Date.now();
-            const newEnd = dayjs(currentEnd).add(7, 'day').endOf('day').valueOf();
-            localStorage.setItem(APP.STORAGE_KEYS.PERIOD_END_DATE, newEnd);
-            showMessage('期間を1週間延長しました', 'success');
-            document.dispatchEvent(new CustomEvent('refresh-ui'));
-        },
-    });
-    
-    console.log('[main.js] ✅ All actions registered to ActionRouter');
-    console.log(`[main.js] 📊 Total registered: ${actionRouter.handlers.size} actions`);
-};
+// ★追加: Timerも登録（timer.js内でも登録していますが、念の為main.js側でも明示）
+window.Timer = Timer;
 
 /* ==========================================================================
    Initialization & Global State
@@ -251,8 +40,8 @@ if ('serviceWorker' in navigator) {
             // UI描画の準備を待ってから表示 (1秒後)
             setTimeout(() => {
                 // UIオブジェクトが利用可能か確認（念のため）
-                if (UI && UI.showMessage) {
-                    UI.showMessage('新しいバージョンに更新しました', 'success');
+                if (window.UI && window.UI.showMessage) {
+                    window.UI.showMessage('新しいバージョンに更新しました', 'success');
                 }
             }, 1000);
         }
@@ -360,27 +149,27 @@ const initApp = async () => {
 
         if (!isOnboarded) {
             // A. 初回ユーザー -> 既存の判定ロジックにお任せ (Wizardへ)
-            if (Onboarding && Onboarding.checkLandingPage) {
-                Onboarding.checkLandingPage();
+            if (window.Onboarding && window.Onboarding.checkLandingPage) {
+                window.Onboarding.checkLandingPage();
             }
         } else {
             // B. 既存ユーザー -> 時間経過判定
             if (now - lastLaunch > THRESHOLD) {
                 // 久しぶり -> スプラッシュ再生 (playSplashがあれば実行)
                 console.log('✨ Showing Smart Splash (Time elapsed)');
-                if (Onboarding && Onboarding.playSplash) {
-                    Onboarding.playSplash();
+                if (window.Onboarding && window.Onboarding.playSplash) {
+                    window.Onboarding.playSplash();
                 } else {
                     // フォールバック（メソッド未実装時）
-                    if (Onboarding && Onboarding.checkLandingPage) {
-                        Onboarding.checkLandingPage();
+                    if (window.Onboarding && window.Onboarding.checkLandingPage) {
+                        window.Onboarding.checkLandingPage();
                     }
                 }
             } else {
                 // 直近の利用 -> 即ホーム画面へ (LPを即座に消す)
                 console.log('🚀 Skipping Splash (Quick Resume)');
-                if (Onboarding && Onboarding.checkLandingPage) {
-                    Onboarding.checkLandingPage();
+                if (window.Onboarding && window.Onboarding.checkLandingPage) {
+                    window.Onboarding.checkLandingPage();
                 }
             }
             // 最終起動時刻を更新
@@ -426,8 +215,8 @@ const initApp = async () => {
         // 7. Restore Timer State
         // ★修正: Timer.init() を呼ぶだけでOKです。
         // （timer.js内の checkResume() が、自動的に計算復帰とモーダル表示を行います）
-        if (Timer && Timer.init) {
-            Timer.init();
+        if (window.Timer && window.Timer.init) {
+            window.Timer.init();
         }
 
         // 画面のロックを強制解除して表示する
@@ -520,24 +309,6 @@ const handleSwipe = () => {
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
-
-    // 1. アクション登録（最優先）
-    registerActions();
-    
-    // 2. ActionRouter初期化
-    initActionRouter();
-    document.addEventListener('action-error', (e) => {
-        const { action, error } = e.detail;
-        console.error(`[Action Error] ${action}:`, error);
-        if (UI && UI.showMessage) {
-            UI.showMessage('操作中にエラーが発生しました', 'error');
-        }
-    });
-
-    initHandleRepeatDelegation(); 
-
-    // 3. ファイル入力ハンドラー
-    setupFileInputHandlers();
     
     const btnSaveSettings = document.getElementById('btn-save-settings');
     if (btnSaveSettings) {
