@@ -122,10 +122,23 @@ const setupLifecycleListeners = () => {
 
 // ★修正: 初期化ロジックを分離し、エラーハンドリングを強化
 const initApp = async () => {
+    // 二重起動防止ガード（念のため）
+    if (window._isAppInitialized) {
+        console.warn('App already initialized. Skipping.');
+        return;
+    }
+    window._isAppInitialized = true;
+
     try {
         console.log('App Initializing...');
 
-        initActionRouter();
+        // ★ ActionRouterの初期化ガード強化
+        // windowオブジェクトにフラグを持たせ、確実に1回しか実行されないようにする
+        if (!window._actionRouterLoaded) {
+            initActionRouter();
+            window._actionRouterLoaded = true;
+            console.log('ActionRouter loaded.');
+        }
 
         // 1. スマート・スプラッシュ判定 (Smart Splash Logic)
         const isOnboarded = localStorage.getItem('nomutore_onboarding_complete');
