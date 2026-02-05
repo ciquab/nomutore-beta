@@ -1,4 +1,4 @@
-import { DataManager } from './dataManager.js';
+import { dataManager } from './dataManager.js';
 
 /* ==========================================================================
    Google Drive Manager (MVP)
