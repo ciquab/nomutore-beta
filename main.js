@@ -145,7 +145,7 @@ const registerActions = () => {
             if (UI && UI.openLogDetail) {
                 UI.openLogDetail(data.id);
             }
-
+        },
         // ========== Beer系 ==========
 
         'beer:openFirst': () => {
