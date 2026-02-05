@@ -9,8 +9,6 @@ import { initErrorHandler } from './errorHandler.js';
 import { handleSaveSettings } from './ui/modal.js'; 
 import { CloudManager } from './cloudManager.js';
 import { Onboarding } from './ui/onboarding.js';
-import { initActionRouter } from './ui/actionRouter.js'; 
-
 import dayjs from 'https://cdn.jsdelivr.net/npm/dayjs@1.11.10/+esm';
 
 // HTMLからonclickで呼ぶためにwindowオブジェクトに登録
@@ -122,23 +120,8 @@ const setupLifecycleListeners = () => {
 
 // ★修正: 初期化ロジックを分離し、エラーハンドリングを強化
 const initApp = async () => {
-    // 二重起動防止ガード（念のため）
-    if (window._isAppInitialized) {
-        console.warn('App already initialized. Skipping.');
-        return;
-    }
-    window._isAppInitialized = true;
-
     try {
         console.log('App Initializing...');
-
-        // ★ ActionRouterの初期化ガード強化
-        // windowオブジェクトにフラグを持たせ、確実に1回しか実行されないようにする
-        if (!window._actionRouterLoaded) {
-            initActionRouter();
-            window._actionRouterLoaded = true;
-            console.log('ActionRouter loaded.');
-        }
 
         // 1. スマート・スプラッシュ判定 (Smart Splash Logic)
         const isOnboarded = localStorage.getItem('nomutore_onboarding_complete');
@@ -195,7 +178,6 @@ const initApp = async () => {
 
         // 4. Load & Verify Data
         updateBeerSelectOptions(); 
-        generateSettingsOptions();
         UI.applyTheme(localStorage.getItem(APP.STORAGE_KEYS.THEME) || 'system');
 
         // 当日のチェックレコードを確保（なければ作成）

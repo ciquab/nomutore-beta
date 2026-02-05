@@ -113,11 +113,11 @@
             </div>
 
             <div class="flex items-center gap-1">
-                <button data-action="share" class="w-8 h-8 flex items-center justify-center rounded-full text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition flex-shrink-0">
+                <button onclick="UI.openShareModal('status')" class="w-8 h-8 flex items-center justify-center rounded-full text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition flex-shrink-0">
                 <i class="ph-bold ph-share-network text-lg"></i>
             </button>
 
-            <button id="btn-help" data-action="open-help" class="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition flex-shrink-0">
+            <button id="btn-help" onclick="UI.openHelp()" class="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition flex-shrink-0">
                 <i class="ph-bold ph-question text-lg"></i>
             </button>
             <button onclick="UI.applyTheme(document.documentElement.classList.contains('dark') ? 'light' : 'dark')" class="w-8 h-8 flex items-center justify-center rounded-full transition flex-shrink-0">
@@ -170,9 +170,9 @@
             </section>
 
             <section class="grid grid-cols-2 gap-3 items-stretch">
-                <div id="liver-rank-card" class="glass-panel p-4 rounded-2xl relative overflow-hidden group transition hover:border-indigo-300 dark:hover:border-indigo-700 cursor-pointer" data-action="open-help" data-section="game-mechanics">
+                <div id="liver-rank-card" class="glass-panel p-4 rounded-2xl relative overflow-hidden group transition hover:border-indigo-300 dark:hover:border-indigo-700 cursor-pointer" onclick="UI.openHelp('game-mechanics')">
                     </div>
-                <div id="check-status" class="glass-panel p-4 rounded-2xl relative overflow-hidden group transition hover:border-emerald-300 dark:hover:border-emerald-700 cursor-pointer" data-action="open-check">
+                <div id="check-status" class="glass-panel p-4 rounded-2xl relative overflow-hidden group transition hover:border-emerald-300 dark:hover:border-emerald-700 cursor-pointer" onclick="UI.openCheckModal()">
                     </div>
             </section>
 
@@ -217,7 +217,7 @@
         <div id="tab-record" class="tab-content pb-24 hidden space-y-6">
     <div class="flex items-center justify-start gap-2 px-2 mb-1">
         <h2 class="text-2xl font-black text-base-900 dark:text-white tracking-tight">Record</h2>
-        <button data-action="open-help" data-section="help-record" class="w-6 h-6 rounded-full flex items-center justify-center text-gray-300 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition">
+        <button onclick="UI.openHelp('help-record')" class="w-6 h-6 rounded-full flex items-center justify-center text-gray-300 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition">
             <i class="ph-bold ph-question text-lg"></i>
         </button>
     </div>
@@ -244,7 +244,7 @@
         <h3 class="text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-wider ml-1">手入力 (Manual)</h3>
         <div class="grid grid-cols-2 gap-3">
             
-            <button data-action="open-beer" class="group relative overflow-hidden p-4 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 flex flex-col items-center justify-center gap-2 active:scale-95 transition h-28">
+            <button onclick="UI.openBeerModal()" class="group relative overflow-hidden p-4 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 flex flex-col items-center justify-center gap-2 active:scale-95 transition h-28">
                 <div class="w-10 h-10 rounded-full bg-white dark:bg-amber-900/40 flex items-center justify-center text-amber-500 shadow-sm group-hover:scale-110 transition">
                     <i class="ph-duotone ph-beer-bottle text-2xl"></i>
                 </div>
@@ -254,7 +254,7 @@
                 </div>
             </button>
 
-            <button data-action="open-exercise" class="group relative overflow-hidden p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 flex flex-col items-center justify-center gap-2 active:scale-95 transition h-28">
+            <button onclick="UI.openManualInput()" class="group relative overflow-hidden p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 flex flex-col items-center justify-center gap-2 active:scale-95 transition h-28">
                 <div class="w-10 h-10 rounded-full bg-white dark:bg-indigo-900/40 flex items-center justify-center text-indigo-500 shadow-sm group-hover:scale-110 transition">
                     <i class="ph-duotone ph-pencil-simple-slash text-2xl"></i>
                 </div>
@@ -271,7 +271,7 @@
         <h3 class="text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-wider ml-1">コンディション & ツール</h3>
         <div class="grid grid-cols-2 gap-3">
             
-            <button data-action="open-check" class="p-4 rounded-xl bg-white dark:bg-base-800 border border-gray-100 dark:border-gray-700 flex items-center gap-3 active:scale-95 transition hover:border-emerald-200 shadow-sm">
+            <button onclick="UI.openCheckModal()" class="p-4 rounded-xl bg-white dark:bg-base-800 border border-gray-100 dark:border-gray-700 flex items-center gap-3 active:scale-95 transition hover:border-emerald-200 shadow-sm">
                 <div class="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-500 shrink-0">
                     <i class="ph-duotone ph-heartbeat text-xl"></i>
                 </div>
@@ -281,7 +281,7 @@
                 </div>
             </button>
 
-            <button data-action="open-timer" class="p-4 rounded-xl bg-white dark:bg-base-800 border border-gray-100 dark:border-gray-700 flex items-center gap-3 active:scale-95 transition hover:border-gray-300 shadow-sm">
+            <button onclick="UI.openTimer(true)" class="p-4 rounded-xl bg-white dark:bg-base-800 border border-gray-100 dark:border-gray-700 flex items-center gap-3 active:scale-95 transition hover:border-gray-300 shadow-sm">
                 <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-base-900 dark:text-white shrink-0">
                     <i class="ph-duotone ph-timer text-xl"></i>
                 </div>
@@ -298,7 +298,7 @@
      <div class="flex items-center justify-between px-2 mb-1">
         <div class="flex items-center gap-2">
             <h2 class="text-2xl font-black text-base-900 dark:text-white tracking-tight">Cellar</h2>
-            <button data-action="open-help" data-section="help-cellar" class="w-6 h-6 rounded-full flex items-center justify-center text-gray-300 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition">
+            <button onclick="UI.openHelp('help-cellar')" class="w-6 h-6 rounded-full flex items-center justify-center text-gray-300 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition">
                 <i class="ph-bold ph-question text-lg"></i>
             </button>
         </div>
@@ -312,10 +312,10 @@
              <div id="view-cellar-logs" class="space-y-3 pb-24">
                  <div class="flex justify-between items-center px-2 mb-2">
     <span id="history-base-label" class="text-xs font-bold text-gray-400 uppercase tracking-wide">All Records</span>
-    <div class="flex gap-3"> <button data-action="toggle-edit-mode" class="text-xs text-indigo-600 dark:text-indigo-400 font-bold hover:bg-gray-100 dark:hover:bg-gray-800 px-2 py-1 rounded transition">
+    <div class="flex gap-3"> <button onclick="UI.toggleEditMode()" class="text-xs text-indigo-600 dark:text-indigo-400 font-bold hover:bg-gray-100 dark:hover:bg-gray-800 px-2 py-1 rounded transition">
             Edit
         </button>
-        <button id="btn-select-all" data-action="toggle-select-all" class="hidden text-xs text-indigo-500 font-bold">Select All</button>
+        <button id="btn-select-all" onclick="UI.toggleSelectAll()" class="hidden text-xs text-indigo-500 font-bold">Select All</button>
     </div>
 </div>
                  
@@ -331,7 +331,7 @@
                  </button>
  
                  <div id="bulk-action-area" class="fixed bottom-24 left-0 right-0 z-40 flex justify-center pointer-events-none">
-                     <button id="btn-delete-selected"  data-action="delete-selected" class="pointer-events-auto shadow-lg bg-red-500 text-white px-6 py-3 rounded-full font-bold shadow-red-500/30 transition-all transform translate-y-20 opacity-0 flex items-center gap-2 disabled:opacity-50">
+                     <button id="btn-delete-selected" onclick="UI.deleteSelectedLogs()" class="pointer-events-auto shadow-lg bg-red-500 text-white px-6 py-3 rounded-full font-bold shadow-red-500/30 transition-all transform translate-y-20 opacity-0 flex items-center gap-2 disabled:opacity-50">
                          <i class="ph-bold ph-trash"></i>
                          Delete Selected
                      </button>
@@ -352,7 +352,7 @@
         <div id="tab-settings" class="tab-content pb-32 hidden">
     <div class="flex items-center justify-start gap-2 px-2 mb-4">
         <h2 class="text-2xl font-black text-base-900 dark:text-white tracking-tight">Settings</h2>
-        <button data-action="open-help" data-section="help-settings" class="w-6 h-6 rounded-full flex items-center justify-center text-gray-300 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition">
+        <button onclick="UI.openHelp('help-settings')" class="w-6 h-6 rounded-full flex items-center justify-center text-gray-300 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition">
             <i class="ph-bold ph-question text-lg"></i>
         </button>
     </div>
@@ -532,7 +532,7 @@
                     <i class="ph-fill ph-info text-indigo-500"></i>
                     About
                 </h2>
-                <button data-action="open-help" class="w-full flex items-center justify-between p-4 bg-gray-100 dark:bg-gray-800 rounded-xl group transition hover:bg-gray-200 dark:hover:bg-gray-700 mb-3">
+                <button onclick="UI.openHelp()" class="w-full flex items-center justify-between p-4 bg-gray-100 dark:bg-gray-800 rounded-xl group transition hover:bg-gray-200 dark:hover:bg-gray-700 mb-3">
                     <div class="flex items-center gap-3">
                         <div class="w-8 h-8 rounded-full bg-white dark:bg-gray-700 flex items-center justify-center shadow-sm">
                             <i class="ph-fill ph-book-open text-indigo-500"></i>
@@ -590,22 +590,22 @@
 <nav class="fixed bottom-6 left-1/2 transform -translate-x-1/2 w-[90%] max-w-sm z-50">
     <div class="floating-nav rounded-full px-2 py-2 flex justify-between items-center bg-white/80 dark:bg-base-900/80 backdrop-blur-xl shadow-float transition-all duration-300">
         
-        <button id="nav-tab-home" data-action="switch-tab" data-tab="home" class="nav-item nav-pill-active">
+        <button id="nav-tab-home" class="nav-item nav-pill-active">
             <i class="ph-fill ph-house"></i>
             <span class="label">Home</span>
         </button>
         
-        <button id="nav-tab-record" data-action="switch-tab" data-tab="record" class="nav-item p-3 rounded-full hover:bg-base-100 dark:hover:bg-base-800 text-gray-400">
+        <button id="nav-tab-record" class="nav-item p-3 rounded-full hover:bg-base-100 dark:hover:bg-base-800 text-gray-400">
             <i class="ph-bold ph-plus-circle"></i>
             <span class="label">Record</span>
         </button>
         
-        <button id="nav-tab-cellar" data-action="switch-tab" data-tab="cellar" class="nav-item p-3 rounded-full hover:bg-base-100 dark:hover:bg-base-800 text-gray-400">
+        <button id="nav-tab-cellar" class="nav-item p-3 rounded-full hover:bg-base-100 dark:hover:bg-base-800 text-gray-400">
             <i class="ph-bold ph-books"></i>
             <span class="label">Cellar</span>
         </button>
         
-        <button id="nav-tab-settings" data-action="switch-tab" data-tab="settings" class="nav-item p-3 rounded-full hover:bg-base-100 dark:hover:bg-base-800 text-gray-400">
+        <button id="nav-tab-settings" class="nav-item p-3 rounded-full hover:bg-base-100 dark:hover:bg-base-800 text-gray-400">
             <i class="ph-bold ph-gear"></i>
             <span class="label">Settings</span>
         </button>
@@ -636,7 +636,7 @@
                     <h3 class="font-black text-lg">Check Library</h3>
                     <p class="text-[10px] text-gray-400">Select items to track daily</p>
                 </div>
-                <button data-action="close-modal" data-target="check-library-modal" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center transition text-gray-500 dark:text-gray-400">
+                <button onclick="UI.closeModal('check-library-modal')" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center transition text-gray-500 dark:text-gray-400">
     <i class="ph-bold ph-x text-lg"></i></button>
             </div>
             
@@ -674,7 +674,7 @@
 
 <div id="action-menu-modal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center hidden pointer-events-none" role="dialog" aria-modal="true">
     
-    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 opacity-0 pointer-events-auto" data-action="close-modal" data-target="action-menu-modal"></div>
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 opacity-0 pointer-events-auto" onclick="UI.closeModal('action-menu-modal')"></div>
     
     <div class="relative w-full sm:max-w-md bg-white dark:bg-base-900 rounded-t-[2rem] sm:rounded-[2rem] p-6 pb-10 transform transition-all duration-300 translate-y-full sm:translate-y-10 scale-95 opacity-0 pointer-events-auto max-h-[90vh] flex flex-col shadow-2xl">
         
@@ -685,7 +685,7 @@
                 <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Quick Action</span>
                 <h3 id="action-menu-date-label" class="text-xl font-black text-base-900 dark:text-white leading-none mt-0.5 font-['Outfit']">Today</h3>
             </div>
-            <button data-action="close-modal" data-target="action-menu-modal" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+            <button onclick="UI.closeModal('action-menu-modal')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
                 <i class="ph-bold ph-x text-lg"></i>
             </button>
         </div>
@@ -706,7 +706,7 @@
         <div class="bg-white dark:bg-base-900 w-full max-w-md rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden flex flex-col max-h-[90vh] transform transition-all scale-95 opacity-0 duration-200">
         <div class="relative z-10 p-4 border-b border-base-100 dark:border-base-800 flex justify-between items-center bg-white/95 dark:bg-base-900/95 backdrop-blur-md">
                 <h3 class="font-bold text-lg">Add Beer</h3>
-                <button data-action="close-modal" data-target="beer-modal" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center transition text-gray-500 dark:text-gray-400">
+                <button onclick="UI.closeModal('beer-modal')" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center transition text-gray-500 dark:text-gray-400">
     <i class="ph-bold ph-x text-lg"></i></button>
             </div>
             <div class="flex p-2 gap-2 bg-base-50 dark:bg-base-900">
@@ -833,7 +833,7 @@
                     <i class="ph-bold ph-trash text-xl"></i>
                 </button>
                 
-                <button data-action="close-modal" data-target="beer-modal" class="flex-1 py-3 text-gray-500 font-bold hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition">
+                <button onclick="UI.closeModal('beer-modal')" class="flex-1 py-3 text-gray-500 font-bold hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition">
                     Cancel
                 </button>
 
@@ -853,7 +853,7 @@
         <div class="bg-white dark:bg-base-900 w-full max-w-md rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden flex flex-col max-h-[90vh] transform transition-all scale-95 opacity-0 duration-200">
         <div class="relative z-10 p-4 border-b border-base-100 dark:border-base-800 flex justify-between items-center bg-white/95 dark:bg-base-900/95 backdrop-blur-md">
                 <h3 class="font-bold text-lg">Daily Check</h3>
-                <button data-action="close-modal" data-target="check-modal" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center transition text-gray-500 dark:text-gray-400">
+                <button onclick="UI.closeModal('check-modal')" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center transition text-gray-500 dark:text-gray-400">
     <i class="ph-bold ph-x text-lg"></i>
                 </button>
             </div>
@@ -890,7 +890,7 @@
 
             <!-- Footer (Border Added, Consistent Layout) -->
             <div class="relative z-10 p-4 border-base-100 dark:border-base-800 flex gap-2 bg-white/95 dark:bg-base-900/95 backdrop-blur-md">
-                <button data-action="close-modal" data-target="check-modal" class="flex-1 py-3 font-bold text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition">
+                <button onclick="UI.closeModal('check-modal')" class="flex-1 py-3 font-bold text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition">
                     Cancel
                 </button>
                 <button id="btn-save-check" class="flex-[2] py-3 rounded-xl bg-emerald-500 text-white font-bold shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 transition active:scale-95">
@@ -905,7 +905,7 @@
         
         <div class="relative z-10 w-full max-w-md h-full flex flex-col justify-center p-8 text-center">
             
-            <button data-action="close-modal" data-target="timer-modal" class="absolute top-6 right-6 w-10 h-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center hover:bg-black/30 transition z-50 cursor-pointer text-white border border-white/10">
+            <button onclick="UI.closeTimer()" class="absolute top-6 right-6 w-10 h-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center hover:bg-black/30 transition z-50 cursor-pointer text-white border border-white/10">
     <i class="ph-bold ph-x text-lg"></i></button>
 
             <div class="absolute top-8 left-0 right-0 flex justify-center">
@@ -1004,7 +1004,7 @@
         
         <div class="relative z-10 p-4 border-b border-base-100 bg-white/95 dark:border-base-800 flex justify-between items-center bg-base-50 dark:bg-base-900">
             <h3 class="font-bold text-lg">Add Workout</h3>
-            <button data-action="close-modal" data-target="exercise-modal" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center transition text-gray-500 dark:text-gray-400">
+            <button onclick="UI.closeModal('exercise-modal')" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center transition text-gray-500 dark:text-gray-400">
     <i class="ph-bold ph-x text-lg"></i></button>
         </div>
         
@@ -1045,7 +1045,7 @@
                 <i class="ph-bold ph-trash text-xl"></i>
             </button>
 
-            <button data-action="close-modal" data-target="exercise-modal" class="flex-1 py-3 font-bold text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition">
+            <button onclick="UI.closeModal('exercise-modal')" class="flex-1 py-3 font-bold text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition">
                 Cancel
             </button>
 
@@ -1060,7 +1060,8 @@
      class="fixed inset-0 z-50 flex items-end sm:items-center justify-center hidden pointer-events-none" 
      role="dialog" aria-modal="true">
 
-    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 opacity-0" data-action="close-modal" data-target="day-detail-modal">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 opacity-0"
+         onclick="UI.closeModal('day-detail-modal')">
     </div>
 
     <div class="relative w-full sm:max-w-md h-[85vh] sm:h-[80vh] bg-gray-50 dark:bg-base-900 rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden transform transition-all duration-300 translate-y-full sm:translate-y-10 scale-95 opacity-0 pointer-events-auto">
@@ -1075,7 +1076,7 @@
                         </h3>
                     <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1.5">Daily Summary</p>
                 </div>
-                <button data-action="close-modal" data-target="day-detail-modal" 
+                <button onclick="UI.closeModal('day-detail-modal')" 
                         class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center transition text-gray-500 dark:text-gray-400 active:scale-90">
                     <i class="ph-bold ph-x text-lg"></i>
                 </button>
@@ -1117,7 +1118,7 @@
 </div>
 
 <div id="day-add-selector" class="fixed inset-0 z-[110] flex items-end sm:items-center justify-center hidden pointer-events-none" role="dialog" aria-modal="true">
-    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 opacity-0 pointer-events-auto" data-action="toggle-modal" data-target="day-add-selector"></div>
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 opacity-0 pointer-events-auto" onclick="UI.toggleModal('day-add-selector', false)"></div>
     <div class="relative w-full sm:max-w-md bg-white dark:bg-base-900 rounded-t-[2rem] sm:rounded-[2rem] p-6 pb-10 transform transition-all duration-300 translate-y-full sm:translate-y-10 scale-95 opacity-0 pointer-events-auto shadow-2xl overflow-hidden">    
         <div class="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full sm:hidden"></div>
         <div class="flex justify-between items-center mb-6 mt-2 sm:mt-0">
@@ -1127,7 +1128,7 @@
                     Select Type
                 </h3>
             </div>
-            <button data-action="toggle-modal" data-target="day-add-selector" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+            <button onclick="UI.toggleModal('day-add-selector', false)" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
                 <i class="ph-bold ph-x text-lg"></i>
             </button>
         </div>
@@ -1176,7 +1177,7 @@
                 <i class="ph-duotone ph-book-open text-indigo-500"></i>
                 User Guide
             </h3>
-            <button data-action="close-modal" data-target="help-modal" class="w-10 h-10 rounded-full bg-gray-200/50 dark:bg-gray-700/50 flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-600 transition text-gray-500 dark:text-gray-300">
+            <button onclick="UI.closeModal('help-modal')" class="w-10 h-10 rounded-full bg-gray-200/50 dark:bg-gray-700/50 flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-600 transition text-gray-500 dark:text-gray-300">
                 <i class="ph-bold ph-x text-lg"></i>
             </button>
         </div>
@@ -1728,7 +1729,7 @@
         </div>
         
         <div class="p-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800">
-            <button data-action="close-modal" data-target="help-modal" class="w-full bg-base-900 dark:bg-white dark:text-base-900 text-white font-bold py-3.5 rounded-xl shadow-lg transition transform active:scale-95 text-sm">
+            <button onclick="UI.closeModal('help-modal')" class="w-full bg-base-900 dark:bg-white dark:text-base-900 text-white font-bold py-3.5 rounded-xl shadow-lg transition transform active:scale-95 text-sm">
                 OK, Let's Drink!
             </button>
         </div>
@@ -1811,3 +1812,9 @@
 </body>
 
 </html>
+
+
+
+
+
+

@@ -113,6 +113,25 @@ export const UI = {
             if(el) el.addEventListener(event, fn);
         };
 
+        bind('nav-tab-home', 'click', () => {
+            AudioEngine.init();
+            UI.switchTab('home');
+        });
+        bind('nav-tab-record', 'click', () => {
+            AudioEngine.init();
+            UI.switchTab('record');
+        });
+
+        bind('nav-tab-cellar', 'click', () => {
+            AudioEngine.init();
+            UI.switchTab('cellar');
+        });
+
+        bind('nav-tab-settings', 'click', () => {
+            AudioEngine.init();
+            UI.switchTab('settings');
+        });
+
         // 🍺 ビール保存
         document.addEventListener('save-beer', async (e) => {
     const { data, existingId } = e.detail;
