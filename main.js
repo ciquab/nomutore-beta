@@ -9,17 +9,163 @@ import { initErrorHandler } from './errorHandler.js';
 import { handleSaveSettings } from './ui/modal.js'; 
 import { CloudManager } from './cloudManager.js';
 import { Onboarding } from './ui/onboarding.js';
-import { initActionRouter } from './ui/actionRouter.js'; 
+import { actionRouter, initActionRouter } from './ui/actionRouter.js';
 
 import dayjs from 'https://cdn.jsdelivr.net/npm/dayjs@1.11.10/+esm';
 
-// HTMLからonclickで呼ぶためにwindowオブジェクトに登録
-window.UI = UI;
-window.DataManager = DataManager;
-window.Onboarding = Onboarding;
+// ★ 削除: window汚染を段階的に削除
+// window.UI = UI;  // ← コメントアウト（後で完全削除）
+// window.DataManager = DataManager;
+// window.Onboarding = Onboarding;
+// window.Timer = Timer;
 
-// ★追加: Timerも登録（timer.js内でも登録していますが、念の為main.js側でも明示）
-window.Timer = Timer;
+
+/**
+ * FileInput の change イベント登録
+ * （data-action では扱えないため個別に登録）
+ */
+export const setupFileInputHandlers = () => {
+    const importFileInput = document.getElementById('import-file');
+    if (importFileInput) {
+        importFileInput.addEventListener('change', function(e) {
+            DataManager.importJSON(this);
+        });
+    }
+};
+
+// ========================================
+// ActionRouter への登録（新規追加）
+// ========================================
+
+/**
+ * 【重要】DOMContentLoaded の中で actionRouter.init() を呼ぶ前に
+ * すべてのアクションを登録しておく必要があります
+ */
+const registerActions = () => {
+    actionRouter.registerBulk({
+        // ========== UI系 ==========
+        'ui:switchTab': (tabName) => UI.switchTab(tabName),
+        'ui:switchCellarView': (viewName) => UI.switchCellarViewHTML(viewName),
+        'ui:applyTheme': () => {
+            const isDark = document.documentElement.classList.contains('dark');
+            UI.applyTheme(isDark ? 'light' : 'dark');
+        },
+        
+        // ========== Modal系 ==========
+        'modal:open': (modalId) => toggleModal(modalId, true),
+        'modal:close': (modalId) => toggleModal(modalId, false),
+        'modal:toggle': (modalId) => {
+            const modal = document.getElementById(modalId);
+            const isVisible = modal && !modal.classList.contains('hidden');
+            toggleModal(modalId, !isVisible);
+        },
+        'modal:openBeer': () => UI.openBeerModal(),
+        'modal:openExercise': () => UI.openManualInput(),
+        'modal:openCheck': () => UI.openCheckModal(),
+        'modal:openSettings': () => toggleModal('settings-modal', true),
+        'modal:openTimer': () => openTimer(),
+        'modal:closeTimer': () => closeTimer(),
+        'modal:openHelp': (section) => openHelp(section),
+        'modal:openActionMenu': () => openActionMenu(),
+        'modal:openCheckLibrary': () => {
+            import('./ui/modal.js').then(m => m.openCheckLibrary());
+        },
+        
+        // ========== Data系 ==========
+        'data:exportCSV': (type) => DataManager.exportCSV(type),
+        'data:exportJSON': () => DataManager.exportJSON(),
+        'data:importJSON': () => DataManager.importJSON(),
+        'data:backupToCloud': () => DataManager.backupToCloud(),
+        'data:restoreFromCloud': () => DataManager.restoreFromCloud(),
+        'data:triggerImportFile': () => {
+            const fileInput = document.getElementById('import-file');
+            if (fileInput) fileInput.click();
+        },
+        
+        // ========== Log系 ==========
+        'log:deleteSelected': () => {
+            import('./ui/logList.js').then(m => m.deleteSelectedLogs());
+        },
+        'log:toggleEditMode': () => UI.toggleEditMode(),
+        'log:toggleSelectAll': () => UI.toggleSelectAll(),
+        
+        // ========== Check系 ==========
+        'check:applyPreset': (presetName) => {
+            if (typeof applyPreset === 'function') {
+                applyPreset(presetName);
+            }
+        },
+        'check:applyLibraryChanges': () => {
+            if (typeof applyLibraryChanges === 'function') {
+                applyLibraryChanges();
+            }
+        },
+        'check:addNewItem': () => {
+            if (typeof addNewCheckItem === 'function') {
+                addNewCheckItem();
+            }
+        },
+        
+        'check:toggleDryDay': (checked) => UI.toggleDryDay(checked),
+        
+        // ========== Onboarding系 ==========
+        'onboarding:close': () => Onboarding.closeLandingPage(),
+        'onboarding:nextStep': () => Onboarding.nextStep(),
+        'onboarding:prevStep': () => Onboarding.prevStep(),
+        'onboarding:finish': () => Onboarding.finish(),
+        'onboarding:goToWizard': () => Onboarding.goToWizard(),
+        
+        // ========== Timer系 ==========
+        'timer:toggle': () => Timer.toggle(),
+        'timer:finish': () => Timer.finish(),
+        'timer:reset': () => Timer.reset(),
+        
+        // ========== Settings系 ==========
+        'settings:save': () => handleSaveSettings(),
+        
+        // ========== Day Add Selector系 ==========
+        'dayAdd:openBeer': () => {
+            toggleModal('day-add-selector', false);
+            setTimeout(() => UI.openBeerModal(UI.selectedDate), 200);
+        },
+        'dayAdd:openExercise': () => {
+            toggleModal('day-add-selector', false);
+            setTimeout(() => UI.openManualInput(UI.selectedDate), 200);
+        },
+        'dayAdd:openCheck': () => {
+            toggleModal('day-add-selector', false);
+            setTimeout(() => UI.openCheckModal(UI.selectedDate), 200);
+        },
+        
+        // ========== Help系 ==========
+        'help:goToSettings': () => {
+            UI.switchTab('settings');
+            toggleModal('help-modal', false);
+        },
+        
+        // ========== System系 ==========
+        'system:reload': () => location.reload(),
+        
+        // ========== 後方互換性エイリアス（段階的削除対象） ==========
+        'share:open': () => UI.openShareModal(),
+        'open-help': (section) => openHelp(section),
+        'toggle-edit-mode': () => UI.toggleEditMode(),
+        'toggle-select-all': () => UI.toggleSelectAll(),
+        'delete-selected': () => {
+            import('./ui/logList.js').then(m => m.deleteSelectedLogs());
+        },
+        'switch-tab': (tabName) => UI.switchTab(tabName),
+        'close-modal': (modalId) => toggleModal(modalId, false),
+        'toggle-modal': (modalId) => {
+            const modal = document.getElementById(modalId);
+            const isVisible = modal && !modal.classList.contains('hidden');
+            toggleModal(modalId, !isVisible);
+        },
+    });
+    
+    console.log('[main.js] ✅ All actions registered to ActionRouter');
+    console.log(`[main.js] 📊 Total registered: ${actionRouter.handlers.size} actions`);
+};
 
 /* ==========================================================================
    Initialization & Global State
@@ -309,6 +455,19 @@ const handleSwipe = () => {
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
+
+    // 1. アクション登録（最優先）
+    registerActions();
+    
+    // 2. ActionRouter初期化
+    initActionRouter();
+
+
+    // 3. ファイル入力ハンドラー
+    setupFileInputHandlers();
+    
+    // 4. ActionRouter初期化
+    initActionRouter();
     
     const btnSaveSettings = document.getElementById('btn-save-settings');
     if (btnSaveSettings) {
